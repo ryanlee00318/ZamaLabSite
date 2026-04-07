@@ -4,7 +4,7 @@ export default function Layout({children}){
     return (
         <div>
             <NavBar />
-            <div className="min-h-[calc(100vh-280px)]">
+            <div className="min-h-[calc(100vh-212px)]">
                 {children}
             </div>
             <Footer />

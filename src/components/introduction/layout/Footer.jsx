@@ -1,23 +1,19 @@
 export default function Footer() {
     return (
-        <div className="h-[180px] flex items-center justify-between px-12 text-[#999] text-sm">
-            <div>
-                Tron Energy Market © 2026
-            </div>
-            <div className="flex gap-6">
+        <div className="px-4 py-12 text-sm text-[#999] sm:px-6 lg:px-12">
+            <div className="mx-auto flex max-w-7xl flex-col items-center gap-5 text-center md:flex-row md:justify-between md:text-left">
                 <div>
+                    Tron Energy Market &copy; 2026
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
                     <a className="cursor-pointer">Twitter</a>
+                    <a className="cursor-pointer">Telegram</a>
+                    <a className="cursor-pointer">Email</a>
                 </div>
-                <div className="relative">
-                    <a className="cursor-pointer before:content-['•'] before:text-[0.9rem] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2">Telegram</a>
+                <div>
+                    tronenergy.market
                 </div>
-                <div className="relative">
-                    <a className="cursor-pointer before:content-['•'] before:text-[0.9rem] before:absolute before:-left-4 before:top-1/2 before:-translate-y-1/2">Email</a>
-                </div>
-            </div>
-            <div>
-                tronenergy.market
             </div>
         </div>
-    )
+    );
 }
