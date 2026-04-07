@@ -1,5 +1,8 @@
+import Layout from "../components/introduction/layout/Layout"
 export default function HowToMintZama() {
     return (
-        <div>sadf</div>
+        <Layout>
+            asdf
+        </Layout>
     )
 }
