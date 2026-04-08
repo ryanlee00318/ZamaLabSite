@@ -1,0 +1,144 @@
+/* Materialize carousel rules (scoped) + tem.cash footer overrides from index.8f873107.css */
+
+.tem-trusted-partners .col.s12 {
+  width: 100%;
+  margin-left: auto;
+  left: auto;
+  right: auto;
+}
+
+.tem-trusted-partners .carousel {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: 400px;
+  -webkit-perspective: 500px;
+  perspective: 500px;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-transform-origin: 0% 50%;
+  transform-origin: 0% 50%;
+}
+
+.tem-trusted-partners .carousel.carousel-slider {
+  top: 0;
+  left: 0;
+}
+
+.tem-trusted-partners .carousel.carousel-slider .carousel-fixed-item {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 20px;
+  z-index: 1;
+}
+
+.tem-trusted-partners .carousel.carousel-slider .carousel-fixed-item.with-indicators {
+  bottom: 68px;
+}
+
+.tem-trusted-partners .carousel.carousel-slider .carousel-item {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.tem-trusted-partners .carousel.carousel-slider .carousel-item h2 {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 32px;
+}
+
+.tem-trusted-partners .carousel.carousel-slider .carousel-item p {
+  font-size: 15px;
+}
+
+.tem-trusted-partners .carousel .carousel-item {
+  visibility: hidden;
+  width: 200px;
+  height: 200px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.tem-trusted-partners .carousel .carousel-item > img {
+  width: 100%;
+}
+
+.tem-trusted-partners .carousel .indicators {
+  position: absolute;
+  text-align: center;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+}
+
+.tem-trusted-partners .carousel .indicators .indicator-item {
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  height: 8px;
+  width: 8px;
+  margin: 24px 4px;
+  background-color: rgba(255, 255, 255, 0.5);
+  -webkit-transition: background-color 0.3s;
+  transition: background-color 0.3s;
+  border-radius: 50%;
+}
+
+.tem-trusted-partners .carousel .indicators .indicator-item.active {
+  background-color: #fff;
+}
+
+.tem-trusted-partners .carousel.scrolling .carousel-item .materialboxed,
+.tem-trusted-partners .carousel .carousel-item:not(.active) .materialboxed {
+  pointer-events: none;
+}
+
+/* tem.cash: trusted partners strip */
+.tem-trusted-partners .carousel {
+  height: 150px !important;
+}
+
+.tem-trusted-partners .carousel .carousel-item {
+  filter: grayscale();
+  transition: filter 1s;
+  height: unset !important;
+}
+
+.tem-trusted-partners .carousel .carousel-item:hover {
+  filter: unset;
+}
+
+.tem-trusted-partners .carousel .carousel-item > img {
+  height: 50px !important;
+}
+
+.tem-trusted-partners .white-text {
+  color: #fff !important;
+}
+
+/* Materialize-style footer heading (matches tem.cash materialize typography for h5) */
+.tem-trusted-partners > .col.s12 > h5.white-text {
+  font-size: 1.64rem;
+  font-weight: 400;
+  line-height: 1.1;
+  margin: 0.82rem 0 0.656rem 0;
+}
+
+/* Prevent text-caret on non-editable Home areas. */
+.home-page {
+  caret-color: transparent;
+}
+
+.home-page input,
+.home-page textarea,
+.home-page select,
+.home-page [contenteditable='true'] {
+  caret-color: auto;
+}
