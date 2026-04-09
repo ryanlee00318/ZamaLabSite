@@ -1,7 +1,8 @@
 import Layout from "../components/introduction/layout/Layout"
+
 export default function HowToMintZama() {
     return (
-        <Layout>
+        <Layout title="How to mint zama">
             asdf
         </Layout>
     )

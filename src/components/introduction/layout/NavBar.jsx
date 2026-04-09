@@ -25,7 +25,9 @@ export default function NavBar() {
                     <div className="flex items-center gap-8">
                         <div className="flex justify-center md:justify-start">
                             {/* <img className="h-9 w-auto sm:h-10" src={logo} /> */}
-                            <img className="h-9 w-auto sm:h-16" src={tlogo} />
+                            <a href='/'>
+                                <img className="h-9 w-auto sm:h-16" src={tlogo} />
+                            </a>
                         </div>
                         <div className="flex flex-wrap justify-center gap-x-5 gap-y-3 md:justify-start lg:gap-x-10">
                             {navLinks.map((link) => (
