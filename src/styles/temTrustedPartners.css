@@ -151,6 +151,186 @@
   box-shadow: 0 18px 52px rgba(0, 0, 0, 0.35);
 }
 
+.zama-staking-section .community-history-wrap {
+  margin-bottom: 24px;
+}
+
+.zama-staking-section .community-history-header h5 {
+  margin: 0;
+  color: #ecfccb;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.zama-staking-section .community-history-header p {
+  margin: 8px 0 12px;
+  color: #a1a1aa;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.zama-staking-section .community-history-table-wrap {
+  overflow: auto;
+  max-height: 420px;
+  border: 1px solid rgba(244, 244, 245, 0.12);
+  border-radius: 12px;
+  background: #111114;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(163, 230, 53, 0.45) rgba(255, 255, 255, 0.06);
+}
+
+.zama-staking-section .community-history-table-wrap::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.zama-staking-section .community-history-table-wrap::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+}
+
+.zama-staking-section .community-history-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(163, 230, 53, 0.45);
+  border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0);
+  background-clip: padding-box;
+}
+
+.zama-staking-section .community-history-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: rgba(163, 230, 53, 0.62);
+}
+
+.zama-staking-section .community-history-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  color: #e4e4e7;
+  font-size: 13px;
+}
+
+.zama-staking-section .community-history-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #18181b;
+  color: #a1a1aa;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(244, 244, 245, 0.1);
+}
+
+.zama-staking-section .community-history-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(244, 244, 245, 0.08);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.zama-staking-section .community-history-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.zama-staking-section .community-history-table tbody tr:hover {
+  background: rgba(163, 230, 53, 0.05);
+}
+
+.zama-staking-section .history-empty-row {
+  text-align: center;
+  color: #a1a1aa;
+  padding: 34px 16px !important;
+}
+
+.zama-staking-section .history-wallet-pill {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid rgba(163, 230, 53, 0.2);
+  background: rgba(163, 230, 53, 0.06);
+  color: #bef264;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 3px 9px;
+}
+
+.zama-staking-section .history-operator-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.zama-staking-section .history-operator-dot {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.zama-staking-section .history-operator-dot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.zama-staking-section .history-token-value {
+  color: #d4d4d8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.zama-staking-section .history-countdown-pill {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid rgba(59, 130, 246, 0.24);
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 4px 9px;
+}
+
+.zama-staking-section .history-status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 5px 8px;
+  text-transform: uppercase;
+}
+
+.zama-staking-section .history-status-completed {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.34);
+}
+
+.zama-staking-section .history-status-pending {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fde68a;
+  border: 1px solid rgba(234, 179, 8, 0.34);
+}
+
+.zama-staking-section .history-status-unlocking {
+  background: rgba(59, 130, 246, 0.2);
+  color: #bfdbfe;
+  border: 1px solid rgba(59, 130, 246, 0.34);
+}
+
 .zama-staking-section .zama-staking-table {
   width: 100%;
   min-width: 1080px;

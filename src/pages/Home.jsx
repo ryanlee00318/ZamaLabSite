@@ -12,6 +12,7 @@ import '../styles/temCashHeader.css'
 const REWARD_RATE = 0.9750186519
 const MINT_RATE = 1.553813
 const STATIC_WALLET_ADDRESS = '0x88f9DADF3541998B7edB482485C56234297C84c4'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:4000'
 const A = (name) => `/tem-cash-assets/${name}`
 
 /** Same order and duplicates as https://tem.cash/ footer markup. */
@@ -24,27 +25,6 @@ const TRUSTED_PARTNER_SLIDES = [
   { href: 'https://changelly.com/', img: 'changelly.svg' },
   { href: 'https://just.money/?from=TEM&n=TRON&t=swap&to=TRX', img: 'justmoney.svg' },
   { href: 'https://tronql.com', img: 'tronql.svg' },
-]
-
-const ZAMA_STAKING_OPERATORS = [
-  { operator: 'Conduit', role: 'KMS', apr: '47.11%', totalRewards: '5.2M', totalStake: '47.1M', commission: '10.00%' },
-  { operator: 'InfStones', role: 'KMS', apr: '46.92%', totalRewards: '5.2M', totalStake: '47.5M', commission: '10.00%' },
-  { operator: 'Artifact', role: 'Coprocessor', apr: '46.85%', totalRewards: '8.6M', totalStake: '83.0M', commission: '10.00%' },
-  { operator: 'Blockscape', role: 'Coprocessor', apr: '46.79%', totalRewards: '8.7M', totalStake: '83.2M', commission: '10.00%' },
-  { operator: 'Luganodes', role: 'Coprocessor', apr: '46.11%', totalRewards: '8.4M', totalStake: '85.7M', commission: '10.00%' },
-  { operator: 'P2P', role: 'Coprocessor', apr: '45.88%', totalRewards: '9.3M', totalStake: '86.5M', commission: '10.00%' },
-  { operator: 'Unit410', role: 'KMS', apr: '45.60%', totalRewards: '4.2M', totalStake: '39.7M', commission: '20.00%' },
-  { operator: 'Figment', role: 'KMS', apr: '44.74%', totalRewards: '4.1M', totalStake: '41.3M', commission: '20.00%' },
-  { operator: 'Zama (Coprocessor)', role: 'Coprocessor', apr: '44.63%', totalRewards: '9.2M', totalStake: '91.4M', commission: '10.00%' },
-  { operator: 'Omakase', role: 'KMS', apr: '44.62%', totalRewards: '4.2M', totalStake: '41.5M', commission: '20.00%' },
-  { operator: 'Etherscan', role: 'KMS', apr: '44.31%', totalRewards: '5.3M', totalStake: '53.3M', commission: '10.00%' },
-  { operator: 'Ledger', role: 'KMS', apr: '43.90%', totalRewards: '4.4M', totalStake: '42.9M', commission: '20.00%' },
-  { operator: 'LayerZero', role: 'KMS', apr: '43.20%', totalRewards: '5.3M', totalStake: '56.0M', commission: '10.00%' },
-  { operator: 'Stake Capital', role: 'KMS', apr: '42.74%', totalRewards: '5.3M', totalStake: '57.3M', commission: '10.00%' },
-  { operator: 'Dfns', role: 'KMS', apr: '42.65%', totalRewards: '5.2M', totalStake: '57.5M', commission: '10.00%' },
-  { operator: 'Fireblocks', role: 'KMS', apr: '42.29%', totalRewards: '5.3M', totalStake: '58.5M', commission: '10.00%' },
-  { operator: 'OpenZeppelin', role: 'KMS', apr: '42.24%', totalRewards: '5.1M', totalStake: '46.3M', commission: '20.00%' },
-  { operator: 'Zama (KMS)', role: 'KMS', apr: '40.85%', totalRewards: '5.4M', totalStake: '62.7M', commission: '10.00%' },
 ]
 
 const OPERATOR_ICON_PATHS = {
@@ -90,6 +70,65 @@ const parseSortValue = (value) => {
   return normalized.toLowerCase()
 }
 
+const formatRemainingDuration = (unlockEndAt, nowTimestamp) => {
+  const endTimestamp = Date.parse(unlockEndAt)
+  if (!Number.isFinite(endTimestamp)) return '-'
+
+  const remainingMs = Math.max(0, endTimestamp - nowTimestamp)
+  const totalSeconds = Math.floor(remainingMs / 1000)
+
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  return `${days}d ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
+const formatHistoryWallet = (wallet) => {
+  if (typeof wallet !== 'string' || wallet.length < 12) return wallet ?? '-'
+  return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`
+}
+
+const formatHistoryNumber = (value) => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value.toLocaleString(undefined, { maximumFractionDigits: 2 })
+  }
+  if (typeof value === 'string') {
+    const normalized = Number.parseFloat(value.replaceAll(',', ''))
+    if (Number.isFinite(normalized)) {
+      return normalized.toLocaleString(undefined, { maximumFractionDigits: 2 })
+    }
+    return value
+  }
+  return '-'
+}
+
+const resolveHistoryStatus = (row, nowTimestamp) => {
+  const unlockEndTimestamp = Date.parse(row.unlockEndAt)
+  const claimTimestamp = Date.parse(row.claimAt)
+
+  if (!Number.isFinite(unlockEndTimestamp)) {
+    if (row.rewardStatus === 'claimed') {
+      return { label: 'claimed', className: 'history-status-completed' }
+    }
+    if (row.rewardStatus === 'pending_reward') {
+      return { label: 'pending reward', className: 'history-status-pending' }
+    }
+    return { label: 'unlocking', className: 'history-status-unlocking' }
+  }
+
+  if (nowTimestamp < unlockEndTimestamp) {
+    return { label: 'unlocking', className: 'history-status-unlocking' }
+  }
+
+  if (Number.isFinite(claimTimestamp) && nowTimestamp < claimTimestamp) {
+    return { label: 'pending reward', className: 'history-status-pending' }
+  }
+
+  return { label: 'claimed', className: 'history-status-completed' }
+}
+
 function Home() {
   const partnersCarouselRef = useRef(null)
   const walletsFlipRef = useRef(null)
@@ -98,6 +137,13 @@ function Home() {
   const [trxAmount, setTrxAmount] = useState(10000)
   const [mintAmount, setMintAmount] = useState(10000)
   const [sortConfig, setSortConfig] = useState({ key: 'apr', direction: 'desc' })
+  const [operators, setOperators] = useState([])
+  const [operatorsLoading, setOperatorsLoading] = useState(true)
+  const [operatorsError, setOperatorsError] = useState('')
+  const [communityHistory, setCommunityHistory] = useState([])
+  const [communityHistoryLoading, setCommunityHistoryLoading] = useState(true)
+  const [communityHistoryError, setCommunityHistoryError] = useState('')
+  const [nowTimestamp, setNowTimestamp] = useState(Date.now())
   const [expandedStakeKey, setExpandedStakeKey] = useState(null)
   const [stakePanelTab, setStakePanelTab] = useState('stake')
   const [stakeInputValues, setStakeInputValues] = useState({})
@@ -114,14 +160,101 @@ function Home() {
   }, [])
 
   useEffect(() => {
+    let ignore = false
+
+    const loadCommunityHistory = async () => {
+      if (ignore) return
+      setCommunityHistoryLoading(true)
+      setCommunityHistoryError('')
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/community-staking-history`)
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`)
+        }
+
+        const payload = await response.json()
+        if (!Array.isArray(payload?.data)) {
+          throw new Error('Invalid API response shape.')
+        }
+
+        if (ignore) return
+        setCommunityHistory(payload.data)
+      } catch {
+        if (ignore) return
+
+        setCommunityHistoryError('Unable to sync community staking history from backend.')
+        setCommunityHistory([])
+      } finally {
+        if (!ignore) {
+          setCommunityHistoryLoading(false)
+        }
+      }
+    }
+
+    loadCommunityHistory()
+    const intervalId = window.setInterval(loadCommunityHistory, 30000)
+
+    return () => {
+      ignore = true
+      window.clearInterval(intervalId)
+    }
+  }, [])
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNowTimestamp(Date.now())
+    }, 1000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
+
+  useEffect(() => {
     return setupTemCashWalletFlip(walletsFlipRef.current, walletFlipUrls)
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    const loadOperators = async () => {
+      setOperatorsLoading(true)
+      setOperatorsError('')
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/staking-operators`, {
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`)
+        }
+
+        const payload = await response.json()
+        if (!Array.isArray(payload?.data)) {
+          throw new Error('Invalid API response shape.')
+        }
+
+        setOperators(payload.data)
+      } catch (error) {
+        if (error?.name === 'AbortError') return
+
+        setOperatorsError('Unable to sync staking operators from backend.')
+        setOperators([])
+      } finally {
+        setOperatorsLoading(false)
+      }
+    }
+
+    loadOperators()
+    return () => controller.abort()
   }, [])
 
   const temReceived = useMemo(() => trxAmount * REWARD_RATE, [trxAmount])
   const trxLabel = useMemo(() => Number(trxAmount).toLocaleString(), [trxAmount])
   const trxNeededForMint = useMemo(() => mintAmount * MINT_RATE, [mintAmount])
   const sortedOperators = useMemo(() => {
-    const rows = [...ZAMA_STAKING_OPERATORS]
+    const rows = [...operators]
     if (!sortConfig?.key) return rows
 
     rows.sort((a, b) => {
@@ -143,7 +276,7 @@ function Home() {
     })
 
     return rows
-  }, [sortConfig])
+  }, [sortConfig, operators])
 
   const handleTrxChange = (event) => {
     const value = Number(event.target.value)
@@ -370,11 +503,84 @@ function Home() {
 
       <section className="zama-staking-section bg-black/95">
         <div className="mx-auto w-full max-w-[70%] px-4 py-10">
+          <div className="community-history-wrap">
+            <div className="community-history-header">
+              <h5>Other Users&apos; Staking History</h5>
+              <p>
+                {communityHistoryLoading
+                  ? 'Loading community staking history...'
+                  : communityHistoryError || `${communityHistory.length} records synced from backend.`}
+              </p>
+            </div>
+            <div className="community-history-table-wrap">
+              <table className="community-history-table">
+                <thead>
+                  <tr>
+                    <th>Wallet</th>
+                    <th>Operator</th>
+                    <th>Amount</th>
+                    <th>Reward</th>
+                    <th>Unlock / Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {communityHistory.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="history-empty-row">
+                        No community staking history available.
+                      </td>
+                    </tr>
+                  ) : (
+                    communityHistory.map((row) => {
+                      const remaining = formatRemainingDuration(row.unlockEndAt, nowTimestamp)
+                      const status = resolveHistoryStatus(row, nowTimestamp)
+                      const operatorIcon = getOperatorIconUrl(row.operator)
+                      const walletLabel = row.wallet ?? '-'
+                      const operatorLabel = row.operator ?? '-'
+                      return (
+                        <tr key={`${row.wallet}-${row.operator}-${row.unlockEndAt ?? row.unlockTime}`}>
+                          <td>
+                            <span className="history-wallet-pill">{formatHistoryWallet(walletLabel)}</span>
+                          </td>
+                          <td>
+                            <div className="history-operator-cell">
+                              {operatorIcon ? (
+                                <span className="history-operator-dot">
+                                  <img src={operatorIcon} alt={`${operatorLabel} icon`} loading="lazy" />
+                                </span>
+                              ) : null}
+                              <span>{operatorLabel}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="history-token-value">{formatHistoryNumber(row.amount)} ZAMA</span>
+                          </td>
+                          <td>
+                            <span className="history-token-value">{formatHistoryNumber(row.rewards)} ZAMA</span>
+                          </td>
+                          <td>
+                            {status.label === 'unlocking' ? (
+                              <span className="history-countdown-pill">{remaining === '-' ? 'Finishing soon' : remaining}</span>
+                            ) : (
+                              <span className={`history-status-badge ${status.className}`}>{status.label}</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h4 className="text-3xl font-bold text-lime-100">Zama staking operators</h4>
               <p className="mt-2 text-zinc-300">
-                Here is the short descprition
+                {operatorsLoading
+                  ? 'Loading operators from backend...'
+                  : operatorsError || `${operators.length} operators synced from backend.`}
               </p>
             </div>
           </div>
@@ -404,119 +610,127 @@ function Home() {
                 </tr>
               </thead>
               <tbody>
-                {sortedOperators.map((item) => {
-                  const operatorKey = `${item.operator}-${item.role}`
-                  const isExpanded = isWalletConnected && expandedStakeKey === operatorKey
+                {sortedOperators.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="text-center text-zinc-400">
+                      No staking operators available.
+                    </td>
+                  </tr>
+                ) : (
+                  sortedOperators.map((item) => {
+                    const operatorKey = `${item.operator}-${item.role}`
+                    const isExpanded = isWalletConnected && expandedStakeKey === operatorKey
 
-                  return (
-                    <Fragment key={operatorKey}>
-                      <tr>
-                        <td>
-                          <span className="operator-cell">
-                            <span className="operator-dot" aria-hidden="true">
-                              {getOperatorIconUrl(item.operator) ? (
-                                <img
-                                  src={getOperatorIconUrl(item.operator)}
-                                  alt=""
-                                  loading="lazy"
-                                  referrerPolicy="no-referrer"
-                                  onError={(event) => {
-                                    const fallback = event.currentTarget.nextElementSibling
-                                    event.currentTarget.style.display = 'none'
-                                    if (fallback) fallback.style.display = 'inline'
-                                  }}
-                                />
-                              ) : null}
-                              <span className="operator-dot-fallback">{item.operator[0]}</span>
+                    return (
+                      <Fragment key={operatorKey}>
+                        <tr>
+                          <td>
+                            <span className="operator-cell">
+                              <span className="operator-dot" aria-hidden="true">
+                                {getOperatorIconUrl(item.operator) ? (
+                                  <img
+                                    src={getOperatorIconUrl(item.operator)}
+                                    alt=""
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer"
+                                    onError={(event) => {
+                                      const fallback = event.currentTarget.nextElementSibling
+                                      event.currentTarget.style.display = 'none'
+                                      if (fallback) fallback.style.display = 'inline'
+                                    }}
+                                  />
+                                ) : null}
+                                <span className="operator-dot-fallback">{item.operator[0]}</span>
+                              </span>
+                              <span>{item.operator}</span>
                             </span>
-                            <span>{item.operator}</span>
-                          </span>
-                        </td>
-                        <td>{item.role}</td>
-                        <td>{item.apr}</td>
-                        <td>{item.totalRewards}</td>
-                        <td>{item.totalStake}</td>
-                        <td>{item.commission}</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td className="zama-staking-table-button">
-                          <button
-                            type="button"
-                            className="connect-btn"
-                            onClick={isWalletConnected ? () => handleStakeToggle(operatorKey) : handleConnectWallet}
-                          >
-                            {isWalletConnected ? `Stake ${isExpanded ? '▴' : '▾'}` : 'CONNECT WALLET'}
-                          </button>
-                        </td>
-                      </tr>
-                      {isExpanded ? (
-                        <tr className="stake-panel-row">
-                          <td colSpan={9}>
-                            <div className="stake-panel">
-                              <div className="stake-panel-tabs">
-                                <button
-                                  type="button"
-                                  className={`stake-panel-tab ${stakePanelTab === 'stake' ? 'is-active' : ''}`}
-                                  onClick={() => setStakePanelTab('stake')}
-                                >
-                                  Stake
-                                </button>
-                                <button
-                                  type="button"
-                                  className={`stake-panel-tab ${stakePanelTab === 'claim' ? 'is-active' : ''}`}
-                                  onClick={() => setStakePanelTab('claim')}
-                                >
-                                  Claim Rewards
-                                </button>
-                              </div>
-
-                              {stakePanelTab === 'stake' ? (
-                                <div className="stake-panel-content">
-                                  <label className="stake-panel-label" htmlFor={`stake-input-${operatorKey}`}>
-                                    ZAMA Amount
-                                  </label>
-                                  <div className="stake-panel-input-row">
-                                    <input
-                                      id={`stake-input-${operatorKey}`}
-                                      type="number"
-                                      min="0"
-                                      step="any"
-                                      className="stake-panel-input"
-                                      placeholder="0.00"
-                                      value={stakeInputValues[operatorKey] ?? ''}
-                                      onChange={(event) => handleStakeAmountChange(operatorKey, event.target.value)}
-                                    />
-                                    <div className="stake-panel-action-col">
-                                      <button type="button" className="stake-panel-approve-btn" disabled>
-                                        Approve &amp; Stake
-                                      </button>
-                                      <div className="stake-panel-percent-row">
-                                        {['25%', '50%', '75%', 'MAX'].map((percentLabel) => (
-                                          <button
-                                            key={percentLabel}
-                                            type="button"
-                                            className="stake-panel-percent-btn"
-                                            onClick={() => handleStakePercentageClick(operatorKey, percentLabel)}
-                                          >
-                                            {percentLabel}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <p className="stake-panel-balance">Balance: 0.00 $ZAMA</p>
-                                  <p className="stake-panel-note">When you unstake, token withdrawals are only available after the unbonding period of 1 week.</p>
-                                </div>
-                              ) : (
-                                <p className="stake-panel-placeholder">Stake to start earning rewards.</p>
-                              )}
-                            </div>
+                          </td>
+                          <td>{item.role}</td>
+                          <td>{item.apr}</td>
+                          <td>{item.totalRewards}</td>
+                          <td>{item.totalStake}</td>
+                          <td>{item.commission}</td>
+                          <td>-</td>
+                          <td>-</td>
+                          <td className="zama-staking-table-button">
+                            <button
+                              type="button"
+                              className="connect-btn"
+                              onClick={isWalletConnected ? () => handleStakeToggle(operatorKey) : handleConnectWallet}
+                            >
+                              {isWalletConnected ? `Stake ${isExpanded ? '▴' : '▾'}` : 'CONNECT WALLET'}
+                            </button>
                           </td>
                         </tr>
-                      ) : null}
-                    </Fragment>
-                  )
-                })}
+                        {isExpanded ? (
+                          <tr className="stake-panel-row">
+                            <td colSpan={9}>
+                              <div className="stake-panel">
+                                <div className="stake-panel-tabs">
+                                  <button
+                                    type="button"
+                                    className={`stake-panel-tab ${stakePanelTab === 'stake' ? 'is-active' : ''}`}
+                                    onClick={() => setStakePanelTab('stake')}
+                                  >
+                                    Stake
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`stake-panel-tab ${stakePanelTab === 'claim' ? 'is-active' : ''}`}
+                                    onClick={() => setStakePanelTab('claim')}
+                                  >
+                                    Claim Rewards
+                                  </button>
+                                </div>
+
+                                {stakePanelTab === 'stake' ? (
+                                  <div className="stake-panel-content">
+                                    <label className="stake-panel-label" htmlFor={`stake-input-${operatorKey}`}>
+                                      ZAMA Amount
+                                    </label>
+                                    <div className="stake-panel-input-row">
+                                      <input
+                                        id={`stake-input-${operatorKey}`}
+                                        type="number"
+                                        min="0"
+                                        step="any"
+                                        className="stake-panel-input"
+                                        placeholder="0.00"
+                                        value={stakeInputValues[operatorKey] ?? ''}
+                                        onChange={(event) => handleStakeAmountChange(operatorKey, event.target.value)}
+                                      />
+                                      <div className="stake-panel-action-col">
+                                        <button type="button" className="stake-panel-approve-btn" disabled>
+                                          Approve &amp; Stake
+                                        </button>
+                                        <div className="stake-panel-percent-row">
+                                          {['25%', '50%', '75%', 'MAX'].map((percentLabel) => (
+                                            <button
+                                              key={percentLabel}
+                                              type="button"
+                                              className="stake-panel-percent-btn"
+                                              onClick={() => handleStakePercentageClick(operatorKey, percentLabel)}
+                                            >
+                                              {percentLabel}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <p className="stake-panel-balance">Balance: 0.00 $ZAMA</p>
+                                    <p className="stake-panel-note">When you unstake, token withdrawals are only available after the unbonding period of 1 week.</p>
+                                  </div>
+                                ) : (
+                                  <p className="stake-panel-placeholder">Stake to start earning rewards.</p>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
+                    )
+                  })
+                )}
               </tbody>
             </table>
           </div>
