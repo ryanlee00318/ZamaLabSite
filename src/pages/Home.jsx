@@ -272,16 +272,13 @@ function Home() {
               </div>
 
               <div className="space-y-4">
-                <h1 className="text-3xl font-bold text-lime-100">TEM: Tron Energy Mine</h1>
-                <p className="text-lg text-lime-100/90">25.64% APY</p>
+                <h1 className="text-3xl font-bold text-lime-100">Zama Staking</h1>
+                <p className="text-lg text-lime-100/90">Secure staking. Simple rewards.</p>
                 <p className="text-md leading-8 text-zinc-200">
-                  Explore TEM, the real alternative to TRON mining. TEM is a unique token with one of the most impressive APYs
-                  in the TRON ecosystem. TEM gives a HUGE 90% of generated benefits back to investors every single day and is
-                  designed to be the top selection for individuals wanting to maximize their passive income.
+                  Participate in Zama Staking through a straightforward staking experience designed for long-term users. Stake your assets, monitor your position, and earn rewards through a clear and accessible interface.
                 </p>
                 <p className="text-md leading-8 text-zinc-300">
-                  Moreover, there&apos;s no requirement for TRON staking! Simply mint TEM, and begin receiving TRON rewards. TEM is
-                  the only token that represents a simple pathway to generating TRON passive income with minimal effort.
+                  Zama Staking is built to make participation simple. Whether you are getting started or managing an existing position, the platform provides an easy way to stake, track performance, and stay engaged with the ecosystem.
                 </p>
                 <button
                   type="button"
@@ -530,31 +527,26 @@ function Home() {
         <div className="mx-auto w-full max-w-[70%] px-4 py-10">
           <div className="grid gap-24 lg:grid-cols-[1.7fr_1fr]">
             <div>
-              <h5 className="text-3xl font-bold text-lime-100">Introducing, the power of TEM!</h5>
+              <h5 className="text-3xl font-bold text-lime-100">A simpler way to stake with Zama</h5>
               <p className="mt-3 leading-7 text-zinc-200">
-                Are you wondering, &quot;Is Tron a good investment?&quot; Dive into the world of TEM and discover the answer. By
-                minting TEM tokens, you&apos;re not just investing in Tron; you&apos;re securing your place in one of the best long
-                term crypto investments available.
+                Zama Staking offers a professional and user-friendly way to participate in staking. The experience is designed to help users manage their assets confidently while maintaining visibility into rewards and staking activity.
               </p>
               <p className="mt-3 leading-7 text-zinc-300">
-                Why join a Tron pool when it&apos;s easier to just mint TEM tokens, and embark on a journey towards excellent daily
-                returns with one of the best tron investment sites. With TEM, you&apos;re not just investing - you&apos;re investing
-                wisely for your future financial success in the ever-evolving crypto market.
+                With a clean staking flow and accessible interface, users can stake, review balances, and manage positions without unnecessary complexity. The focus is on clarity, consistency, and long-term usability.
               </p>
               <p className="mt-3 leading-7 text-zinc-300">
-                TEM is one of the best low risk investment options in crypto today. In a world full of new crypto meme coins and
-                rug pull scams, TEM has a proven track record of delivering excellent returns to investors.
+                Built for reliability and ease of use, Zama Staking supports a more accessible staking experience for users who value simplicity, transparency, and a professional platform experience.
               </p>
-              <p className="mt-4 text-zinc-200">You can explore TEM using the links below:</p>
+              <p className="mt-4 text-zinc-200">Explore Zama Staking through the links below:</p>
               <div className="mt-2 flex flex-col text-sm">
                 <a href="/blog/how-to-mint-zama" className="text-violet-300 hover:text-violet-200" target='_blank'>
-                  Mint ZAMA
+                  How to Stake ZAMA
                 </a>
                 <a href="/blog/how-to-mint-zama" className="text-violet-300 hover:text-violet-200" target='_blank'>
-                  Invest in ZAMA
+                  Staking Overview
                 </a>
                 <a href="/blog/how-to-mint-zama" className="text-violet-300 hover:text-violet-200" target='_blank'>
-                  What is ZAMA
+                  What is Zama Staking
                 </a>
               </div>
             </div>
