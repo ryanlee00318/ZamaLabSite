@@ -539,13 +539,13 @@ function Home() {
               </p>
               <p className="mt-4 text-zinc-200">Explore Zama Staking through the links below:</p>
               <div className="mt-2 flex flex-col text-sm">
-                <a href="/blog/how-to-mint-zama" className="text-violet-300 hover:text-violet-200" target='_blank'>
+                <a href="/blog/how-to-stake-zama" className="text-violet-300 hover:text-violet-200" target='_blank'>
                   How to Stake ZAMA
                 </a>
-                <a href="/blog/how-to-mint-zama" className="text-violet-300 hover:text-violet-200" target='_blank'>
+                <a href="/blog/how-to-stake-zama" className="text-violet-300 hover:text-violet-200" target='_blank'>
                   Staking Overview
                 </a>
-                <a href="/blog/how-to-mint-zama" className="text-violet-300 hover:text-violet-200" target='_blank'>
+                <a href="/blog/how-to-stake-zama" className="text-violet-300 hover:text-violet-200" target='_blank'>
                   What is Zama Staking
                 </a>
               </div>

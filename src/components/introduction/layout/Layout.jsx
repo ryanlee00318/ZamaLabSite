@@ -2,10 +2,10 @@ import NavBar from "./NavBar"
 import Footer from "./Footer"
 import { useEffect } from "react";
 
-export default function Layout({children}){
+export default function Layout({ children, title = "Tron Energy Market" }){
     useEffect(() => {
-        document.title = "How To Mint Zama";
-    }, []);
+        document.title = title;
+    }, [title]);
     return (
         <div>
             <NavBar />
