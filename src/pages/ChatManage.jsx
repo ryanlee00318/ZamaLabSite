@@ -42,6 +42,10 @@ function ChatManage() {
   const pollInFlightAbortRef = useRef(null)
 
   const isLoggedIn = useMemo(() => Boolean(token && admin), [token, admin])
+  const emailMessages = useMemo(
+    () => messages.filter((row) => String(row?.id ?? '').startsWith('email_support:')),
+    [messages]
+  )
 
   const updateStickToBottomFromScroll = () => {
     const el = messagesListRef.current
@@ -343,6 +347,37 @@ function ChatManage() {
     void handleSendSupportMessage(event)
   }
 
+  function parseEmailSupportPreview(messageText) {
+    const text = String(messageText ?? '')
+    const lines = text.split('\n')
+    const firstLine = lines[0] ?? ''
+    const fromLine = lines[1] ?? ''
+    const body = lines.slice(3).join('\n').trim()
+    const fromRaw = fromLine.replace(/^From:\s*/i, '').trim()
+
+    let senderName = fromRaw
+    let senderEmail = ''
+    const namedEmailMatch = fromRaw.match(/^(.*?)\s*<([^>]+)>$/)
+    if (namedEmailMatch) {
+      senderName = namedEmailMatch[1].trim() || namedEmailMatch[2].trim()
+      senderEmail = namedEmailMatch[2].trim()
+    } else if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromRaw)) {
+      senderName = ''
+      senderEmail = fromRaw
+    }
+
+    return {
+      subject: firstLine.replace(/^\[Email Support\]\s*/i, '').trim() || '(No subject)',
+      senderName: senderName || '(Unknown sender)',
+      senderEmail,
+      from: fromRaw,
+      body: body || text,
+    }
+  }
+
+  const selectedMessageIsEmail = String(selectedMessage?.id ?? '').startsWith('email_support:')
+  const selectedEmailPreview = selectedMessageIsEmail ? parseEmailSupportPreview(selectedMessage?.message) : null
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-950 to-black text-zinc-100">
       <header className="border-b border-white/10 bg-zinc-950/80 backdrop-blur">
@@ -467,6 +502,17 @@ function ChatManage() {
                   >
                     Chat view
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('email')}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                      viewMode === 'email'
+                        ? 'bg-lime-300 text-zinc-900'
+                        : 'text-zinc-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    Email
+                  </button>
                 </div>
               </div>
 
@@ -528,7 +574,7 @@ function ChatManage() {
                     </table>
                   </div>
                 </div>
-              ) : (
+              ) : viewMode === 'chat' ? (
                 <div className="rounded-2xl border border-white/10 bg-zinc-900/40 p-3 sm:p-4">
                   <div
                     ref={messagesListRef}
@@ -626,6 +672,79 @@ function ChatManage() {
                     </form>
                   </div>
                 </div>
+              ) : (
+                <div className="overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/40">
+                  <div className="chat-scrollbar-hidden max-h-[min(70vh,560px)] overflow-auto">
+                    <table className="w-full min-w-[920px] border-collapse text-left text-sm">
+                      <thead className="sticky top-0 z-10 bg-zinc-900/95 text-xs uppercase tracking-wide text-zinc-500">
+                        <tr>
+                          <th className="border-b border-white/10 px-3 py-3 font-medium">ID</th>
+                          <th className="border-b border-white/10 px-3 py-3 font-medium">Name</th>
+                          <th className="border-b border-white/10 px-3 py-3 font-medium">Email</th>
+                          <th className="border-b border-white/10 px-3 py-3 font-medium">Time</th>
+                          <th className="border-b border-white/10 px-3 py-3 font-medium">Subject</th>
+                          <th className="border-b border-white/10 px-3 py-3 font-medium">Preview</th>
+                          <th className="border-b border-white/10 px-3 py-3 font-medium">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-zinc-200">
+                        {emailMessages.length === 0 && !dataLoading ? (
+                          <tr>
+                            <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
+                              No email support messages yet.
+                            </td>
+                          </tr>
+                        ) : (
+                          emailMessages.map((row) => {
+                            const preview = parseEmailSupportPreview(row.message)
+                            return (
+                              <tr key={row.id} className="border-b border-white/5 align-top hover:bg-white/[0.03]">
+                                <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-zinc-500">{row.id}</td>
+                                <td className="max-w-[14rem] px-3 py-2 text-violet-200/90">
+                                  <span className="block truncate">{preview.senderName || row.displayId}</span>
+                                </td>
+                                <td className="max-w-[16rem] px-3 py-2 text-zinc-300">
+                                  <span className="block truncate">{preview.senderEmail || '-'}</span>
+                                </td>
+                                <td className="whitespace-nowrap px-3 py-2 text-xs text-zinc-500">
+                                  {new Date(row.createdAt).toLocaleString()}
+                                </td>
+                                <td className="max-w-[16rem] px-3 py-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => openMessageModal(row)}
+                                    className="group block w-full rounded-md text-left outline-none transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-lime-300/35"
+                                    aria-label={`Open email message ${row.id} detail`}
+                                  >
+                                    <span className="line-clamp-2 whitespace-pre-wrap break-words font-medium text-zinc-200 transition group-hover:text-zinc-100">
+                                      {preview.subject}
+                                    </span>
+                                  </button>
+                                </td>
+                                <td className="max-w-[22rem] px-3 py-2">
+                                  <span className="line-clamp-3 whitespace-pre-wrap break-words text-zinc-300">
+                                    {preview.body}
+                                  </span>
+                                </td>
+                                <td className="whitespace-nowrap px-3 py-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteMessage(row.id)}
+                                    disabled={deletingMessageId !== null}
+                                    className="rounded-md border border-rose-500/35 px-2 py-1 text-[11px] font-semibold text-rose-300 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-40"
+                                    aria-label={`Delete message ${row.id}`}
+                                  >
+                                    {deletingMessageId === row.id ? 'Deleting…' : 'Delete'}
+                                  </button>
+                                </td>
+                              </tr>
+                            )
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
             </section>
           </div>
@@ -642,7 +761,7 @@ function ChatManage() {
         role="presentation"
       >
         <section
-          className={`w-full max-w-2xl rounded-2xl border border-white/10 bg-zinc-900/95 p-5 shadow-2xl shadow-black/60 transition-all duration-300 sm:p-6 ${
+          className={`w-full max-w-3xl rounded-3xl border border-white/10 bg-gradient-to-b from-zinc-900 to-zinc-950 p-5 shadow-2xl shadow-black/70 transition-all duration-300 sm:p-6 ${
             selectedMessage ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-4 scale-95 opacity-0'
           }`}
           onClick={(event) => event.stopPropagation()}
@@ -650,30 +769,64 @@ function ChatManage() {
           aria-modal="true"
           aria-labelledby="message-detail-title"
         >
-          <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="mb-5 flex items-start justify-between gap-4 border-b border-white/10 pb-4">
             <div>
-              <h3 id="message-detail-title" className="text-base font-semibold text-white sm:text-lg">
-                Message detail
+              <p className="mb-1 inline-flex rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-300">
+                {selectedMessageIsEmail ? 'Email Support' : 'Chat Message'}
+              </p>
+              <h3 id="message-detail-title" className="text-base font-semibold text-white sm:text-xl">
+                {selectedMessageIsEmail ? 'Email support detail' : 'Message detail'}
               </h3>
               <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
-                From {selectedMessage?.displayId ?? '-'} at{' '}
+                From {selectedMessageIsEmail ? (selectedEmailPreview?.senderName ?? '-') : (selectedMessage?.displayId ?? '-')} at{' '}
                 {selectedMessage ? new Date(selectedMessage.createdAt).toLocaleString() : '-'}
               </p>
             </div>
             <button
               type="button"
               onClick={closeMessageModal}
-              className="rounded-lg border border-white/15 px-2.5 py-1.5 text-xs text-zinc-300 transition hover:border-white/30 hover:text-white"
+              className="rounded-lg border border-white/15 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-white/30 hover:bg-white/5 hover:text-white"
               aria-label="Close message detail"
             >
               Close
             </button>
           </div>
-          <div className="rounded-xl border border-white/10 bg-zinc-950/70 px-4 py-3">
-            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-100 sm:text-[15px]">
-              {selectedMessage?.message ?? ''}
-            </p>
-          </div>
+          {selectedMessageIsEmail ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-white/10 bg-zinc-950/80 px-4 py-3">
+                  <p className="text-[11px] uppercase tracking-wide text-zinc-500">Sender Name</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-100 sm:text-[15px]">
+                    {selectedEmailPreview?.senderName || '-'}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-zinc-950/80 px-4 py-3">
+                  <p className="text-[11px] uppercase tracking-wide text-zinc-500">Sender Email</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-100 sm:text-[15px]">
+                    {selectedEmailPreview?.senderEmail || '-'}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-zinc-950/80 px-4 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-zinc-500">Subject</p>
+                <p className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold leading-relaxed text-zinc-100 sm:text-[15px]">
+                  {selectedEmailPreview?.subject ?? '(No subject)'}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-zinc-950/80 px-4 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-zinc-500">Message</p>
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-100 sm:text-[15px]">
+                  {selectedEmailPreview?.body ?? ''}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-white/10 bg-zinc-950/80 px-4 py-4">
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-100 sm:text-[15px]">
+                {selectedMessage?.message ?? ''}
+              </p>
+            </div>
+          )}
           <p className="mt-3 text-[11px] text-zinc-500 sm:text-xs">
             Press <kbd className="rounded border border-white/20 px-1.5 py-0.5 text-zinc-300">Esc</kbd> to close.
           </p>

@@ -16,6 +16,18 @@ const STATIC_WALLET_ADDRESS = '0x88f9DADF3541998B7edB482485C56234297C84c4'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:4000'
 const A = (name) => `/tem-cash-assets/${name}`
 
+const readErrorMessage = async (response, fallbackMessage) => {
+  try {
+    const payload = await response.json()
+    if (typeof payload?.message === 'string' && payload.message) {
+      return payload.message
+    }
+  } catch {
+    // Ignore body parse errors.
+  }
+  return fallbackMessage
+}
+
 /** Same order and duplicates as https://tem.cash/ footer markup. */
 const TRUSTED_PARTNER_SLIDES = [
   { href: 'https://swft.pro', img: 'swiftpro.svg' },
@@ -156,6 +168,7 @@ function Home() {
     message: '',
   })
   const [supportStatus, setSupportStatus] = useState('')
+  const [supportSubmitting, setSupportSubmitting] = useState(false)
 
   useEffect(() => {
     return setupTemCashPartnersCarousel(partnersCarouselRef.current)
@@ -331,7 +344,7 @@ function Home() {
     if (supportStatus) setSupportStatus('')
   }
 
-  const handleSupportSubmit = (event) => {
+  const handleSupportSubmit = async (event) => {
     event.preventDefault()
     const trimmedValues = {
       name: supportForm.name.trim(),
@@ -345,12 +358,29 @@ function Home() {
       return
     }
 
-    const subject = encodeURIComponent(`[Support] ${trimmedValues.subject}`)
-    const body = encodeURIComponent(
-      `Name: ${trimmedValues.name}\nEmail: ${trimmedValues.email}\n\nMessage:\n${trimmedValues.message}`
-    )
-    window.location.href = `mailto:support@zamalab.site?subject=${subject}&body=${body}`
-    setSupportStatus('Your email draft is ready. Please send it from your mail app.')
+    setSupportSubmitting(true)
+    setSupportStatus('')
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/support/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(trimmedValues),
+      })
+      if (!response.ok) {
+        throw new Error(await readErrorMessage(response, 'Failed to send support request.'))
+      }
+      setSupportForm({
+        name: '',
+        email: '',
+        subject: '',
+        message: '',
+      })
+      setSupportStatus('Support request sent successfully. Our team will review it shortly.')
+    } catch (error) {
+      setSupportStatus(error instanceof Error ? error.message : 'Failed to send support request.')
+    } finally {
+      setSupportSubmitting(false)
+    }
   }
 
   return (
@@ -821,8 +851,8 @@ function Home() {
                     rows={4}
                   />
                 </div>
-                <button type="submit" className="support-form-submit">
-                  Send Support Email
+                <button type="submit" className="support-form-submit" disabled={supportSubmitting}>
+                  {supportSubmitting ? 'Sending...' : 'Send Support Email'}
                 </button>
                 {supportStatus ? <p className="support-form-status">{supportStatus}</p> : null}
               </form>
