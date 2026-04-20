@@ -639,3 +639,30 @@
   font-size: 12px;
   line-height: 1.4;
 }
+
+@media (max-width: 640px) {
+  .zama-staking-section .stake-panel-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .zama-staking-section .stake-panel-approve-btn {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .zama-staking-section .stake-panel-percent-row {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+}
+
+@media (max-width: 420px) {
+  .tem-trusted-partners .carousel {
+    height: 120px !important;
+  }
+
+  .tem-trusted-partners .carousel .carousel-item > img {
+    height: 40px !important;
+  }
+}

@@ -12,35 +12,50 @@
   right: 0;
   z-index: 50;
   background-color: #000000;
+  transition: right 0.3s ease-out;
   box-shadow:
     0 2px 2px 0 rgb(0 0 0 / 14%),
     0 3px 1px -2px rgb(0 0 0 / 20%),
     0 1px 5px 0 rgb(0 0 0 / 12%);
 }
 
+/* Fixed nav ignores parent margin; shorten it when the docked chat panel is open (matches aside width). */
+@media (min-width: 1024px) {
+  .home-page.home-chat-open .tem-cash-header .navbar-fixed > nav {
+    right: 380px;
+  }
+}
+
 .tem-cash-header .tem-cash-nav-inner {
   margin: 0 auto;
-  max-width: 70%;
-  padding: 0 16px;
+  width: 100%;
+  max-width: min(80rem, calc(100% - 24px));
+  padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   min-height: 64px;
+}
+
+@media (min-width: 640px) {
+  .tem-cash-header .tem-cash-nav-inner {
+    max-width: min(80rem, calc(100% - 32px));
+    padding: 0 16px;
+  }
 }
 
 .tem-cash-header .tem-cash-topbar-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
+  gap: 6px 10px;
 }
 
 .tem-cash-header .topbar-button {
-  margin-left: 15px;
   display: flex;
   align-items: center;
-}
-
-.tem-cash-header .topbar-button:first-child {
-  margin-left: 0;
 }
 
 .tem-cash-header .valign-wrapper {

@@ -6,6 +6,7 @@ import tLogo from '../assets/t-logo.png'
 import { setupTemCashPartnersCarousel } from '../lib/temCashPartnersCarousel'
 import { setupTemCashWalletFlip } from '../lib/temCashImageFlip'
 import walletFlipUrls from '../lib/temCashWalletFlipManifest.json'
+import GroupChat from './GroupChat'
 import '../styles/temTrustedPartners.css'
 import '../styles/temCashHeader.css'
 
@@ -147,6 +148,7 @@ function Home() {
   const [expandedStakeKey, setExpandedStakeKey] = useState(null)
   const [stakePanelTab, setStakePanelTab] = useState('stake')
   const [stakeInputValues, setStakeInputValues] = useState({})
+  const [isChatPanelOpen, setIsChatPanelOpen] = useState(false)
   const [supportForm, setSupportForm] = useState({
     name: '',
     email: '',
@@ -352,7 +354,12 @@ function Home() {
   }
 
   return (
-    <div className="home-page flex min-h-screen flex-col bg-black text-white">
+    <div
+      className={`home-page flex min-h-screen flex-col overflow-x-hidden bg-black text-white ${isChatPanelOpen ? 'home-chat-open' : ''}`}
+    >
+      <div
+        className={`transition-[margin] duration-300 ease-out ${isChatPanelOpen ? 'lg:mr-[380px]' : ''}`}
+      >
       <div
         className="bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${backgroundImage})` }}
@@ -361,15 +368,15 @@ function Home() {
         <div className="navbar-fixed">
           <nav className="grey darken-4 nav-wrapper">
             <div className="tem-cash-nav-inner">
-              <a href="/" className="flex items-center">
-                <img src={logoGif} alt="TEM logo" className="h-[64px] w-[64px] rounded-full object-cover" />
-                <img src={tLogo} alt="TEM text logo" className="-ml-2 h-14 w-auto object-contain" />
+              <a href="/" className="flex min-w-0 shrink items-center gap-1">
+                <img src={logoGif} alt="TEM logo" className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-[64px] sm:w-[64px]" />
+                <img src={tLogo} alt="TEM text logo" className="-ml-1 h-10 w-auto max-w-[min(140px,42vw)] object-contain sm:-ml-2 sm:h-14 sm:max-w-none" />
               </a>
               <div className="tem-cash-topbar-actions">
                 {isWalletConnected ? (
                   <div className="topbar-button valign-wrapper">
                     <div
-                      className="inline-flex max-w-[230px] items-center rounded-sm border border-zinc-700 bg-zinc-800 px-3 py-2 text-xs font-semibold tracking-wide text-zinc-100"
+                      className="inline-flex max-w-[min(230px,calc(100vw-200px))] items-center rounded-sm border border-zinc-700 bg-zinc-800 px-2 py-2 text-xs font-semibold tracking-wide text-zinc-100 sm:max-w-[230px] sm:px-3"
                       title={walletAddress}
                     >
                       <span className="overflow-hidden text-ellipsis whitespace-nowrap">{walletAddress}</span>
@@ -394,19 +401,19 @@ function Home() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[70%] px-4 py-20">
+      <main className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
         <section className="grid gap-6 lg:grid-cols-[2.2fr_1fr]">
-          <article className="rounded-3xl border border-lime-300/20 bg-black p-8 shadow-2xl">
-            <div className="grid gap-8 md:grid-cols-[360px_1fr]">
-              <div className="flex h-full items-center justify-center">
-                <div className="h-[360px] w-[360px]">
+          <article className="rounded-2xl border border-lime-300/20 bg-black p-4 shadow-2xl sm:rounded-3xl sm:p-6 md:p-8">
+            <div className="grid gap-6 md:gap-8 lg:grid-cols-[minmax(0,360px)_1fr]">
+              <div className="flex h-full w-full items-center justify-center">
+                <div className="aspect-square w-full max-w-[360px] min-h-[220px] max-h-[min(360px,70vw)]">
                   <Spline scene="https://prod.spline.design/JIZmxcV4oYUWBm21/scene.splinecode" />
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h1 className="text-3xl font-bold text-lime-100">Zama Staking</h1>
-                <p className="text-lg text-lime-100/90">Secure staking. Simple rewards.</p>
+              <div className="min-w-0 space-y-3 sm:space-y-4">
+                <h1 className="text-2xl font-bold text-lime-100 sm:text-3xl">Zama Staking</h1>
+                <p className="text-base text-lime-100/90 sm:text-lg">Secure staking. Simple rewards.</p>
                 <p className="text-md leading-8 text-zinc-200">
                   Participate in Zama Staking through a straightforward staking experience designed for long-term users. Stake your assets, monitor your position, and earn rewards through a clear and accessible interface.
                 </p>
@@ -423,8 +430,8 @@ function Home() {
             </div>
           </article>
 
-          <aside className="space-y-4">
-            <div className="rounded-[30px] border border-lime-300/30 bg-black p-6 shadow-xl">
+          <aside className="min-w-0 space-y-4">
+            <div className="rounded-2xl border border-lime-300/30 bg-black p-4 shadow-xl sm:rounded-[30px] sm:p-6">
               <label htmlFor="temAction" className="text-[12px] text-zinc-300">
                 TEM action:
               </label>
@@ -444,7 +451,7 @@ function Home() {
 
               {action === 'buy' ? (
                 <>
-                  <div className="mb-5 grid grid-cols-2 gap-6">
+                  <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                     <div>
                       <label htmlFor="trxInput" className="block text-[12px] text-zinc-400">
                         TRX (pay):
@@ -502,7 +509,7 @@ function Home() {
       </div>
 
       <section className="zama-staking-section bg-black/95">
-        <div className="mx-auto w-full max-w-[70%] px-4 py-10">
+        <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
           <div className="community-history-wrap">
             <div className="community-history-header">
               <h5>Other Users&apos; Staking History</h5>
@@ -575,8 +582,8 @@ function Home() {
           </div>
 
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h4 className="text-3xl font-bold text-lime-100">Zama staking operators</h4>
+            <div className="min-w-0">
+              <h4 className="text-2xl font-bold text-lime-100 sm:text-3xl">Zama staking operators</h4>
               <p className="mt-2 text-zinc-300">
                 {operatorsLoading
                   ? 'Loading operators from backend...'
@@ -738,10 +745,10 @@ function Home() {
       </section>
 
       <footer className="border-b border-lime-300/20 bg-black/90">
-        <div className="mx-auto w-full max-w-[70%] px-4 py-10">
-          <div className="grid gap-24 lg:grid-cols-[1.7fr_1fr]">
-            <div>
-              <h5 className="text-3xl font-bold text-lime-100">A simpler way to stake with Zama</h5>
+        <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[1.7fr_1fr] lg:gap-24">
+            <div className="min-w-0">
+              <h5 className="text-2xl font-bold text-lime-100 sm:text-3xl">A simpler way to stake with Zama</h5>
               <p className="mt-3 leading-7 text-zinc-200">
                 Zama Staking offers a professional and user-friendly way to participate in staking. The experience is designed to help users manage their assets confidently while maintaining visibility into rewards and staking activity.
               </p>
@@ -765,8 +772,8 @@ function Home() {
               </div>
             </div>
 
-            <div>
-              <h5 className="text-3xl font-bold text-lime-100">Email Support</h5>
+            <div className="min-w-0">
+              <h5 className="text-2xl font-bold text-lime-100 sm:text-3xl">Email Support</h5>
               <form className="support-form-card mt-4" onSubmit={handleSupportSubmit}>
                 <div className="support-form-row">
                   <label htmlFor="support-name">Full name</label>
@@ -842,8 +849,8 @@ function Home() {
           </div>
         </div>
         <div className="border-t border-zinc-800 py-4">
-          <div className="mx-auto flex w-full max-w-[70%] items-center justify-between gap-4 px-4">
-            <ul className="flex flex-wrap items-center gap-4 text-sm text-zinc-300">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 lg:px-8">
+            <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-300">
               <li><a href="#" className="hover:text-lime-300">Twitter</a></li>
               <li><a href="#" className="hover:text-lime-300">Blog</a></li>
               <li><a href="#" className="hover:text-lime-300">Terms &amp; conditions</a></li>
@@ -852,6 +859,41 @@ function Home() {
           </div>
         </div>
       </footer>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setIsChatPanelOpen((prev) => !prev)}
+        className={`fixed right-0 top-1/2 z-[95] -translate-y-1/2 rounded-l-xl border border-r-0 border-lime-300/30 bg-zinc-900/95 px-3 py-4 text-lime-200 shadow-xl transition-transform duration-300 ease-out hover:bg-zinc-800 ${isChatPanelOpen ? 'sm:-translate-x-[380px]' : ''}`}
+        aria-label={isChatPanelOpen ? 'Close group chat panel' : 'Open group chat panel'}
+        title={isChatPanelOpen ? 'Close group chat' : 'Open group chat'}
+      >
+        <span className="block text-xs font-semibold tracking-wide">CHAT</span>
+      </button>
+
+      <aside
+        className={`fixed right-0 top-0 z-[100] h-[100dvh] w-full max-w-full border-l border-lime-300/20 bg-zinc-950/98 shadow-2xl transition-transform duration-300 ease-out sm:max-w-[380px] sm:w-[380px] ${
+          isChatPanelOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        aria-hidden={!isChatPanelOpen}
+      >
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <h4 className="text-sm font-semibold uppercase tracking-[0.18em] text-lime-200">Group Chat</h4>
+            <button
+              type="button"
+              onClick={() => setIsChatPanelOpen(false)}
+              className="rounded-md border border-white/20 px-2 py-1 text-xs text-zinc-300 transition hover:border-lime-300/40 hover:text-lime-200"
+              aria-label="Close group chat"
+            >
+              Close
+            </button>
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col px-2 pb-2">
+            <GroupChat isSidePanel />
+          </div>
+        </div>
+      </aside>
     </div>
   )
 }

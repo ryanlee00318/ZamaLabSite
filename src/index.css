@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .chat-scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .chat-scrollbar-hidden::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
