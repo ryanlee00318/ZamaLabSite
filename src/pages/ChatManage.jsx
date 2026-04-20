@@ -34,6 +34,7 @@ function ChatManage() {
   const [deletingMessageId, setDeletingMessageId] = useState(null)
   const [draftMessage, setDraftMessage] = useState('')
   const [sendingMessage, setSendingMessage] = useState(false)
+  const [selectedMessage, setSelectedMessage] = useState(null)
   const messagesListRef = useRef(null)
   const draftTextareaRef = useRef(null)
   const draftNewlineCaretRef = useRef(null)
@@ -177,6 +178,21 @@ function ChatManage() {
   }, [token, isLoggedIn])
 
   useEffect(() => {
+    if (!selectedMessage) return undefined
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setSelectedMessage(null)
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+    return () => {
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [selectedMessage])
+
+  useEffect(() => {
     if (!isLoggedIn) return undefined
 
     const pollOnce = async () => {
@@ -236,6 +252,7 @@ function ChatManage() {
     setStats(null)
     setMessages([])
     setDraftMessage('')
+    setSelectedMessage(null)
     localStorage.removeItem(CHAT_MANAGE_TOKEN_KEY)
   }
 
@@ -256,6 +273,7 @@ function ChatManage() {
       if (payload?.stats) {
         setStats(payload.stats)
       }
+      setSelectedMessage((current) => (current?.id === messageId ? null : current))
       stickToBottomRef.current = true
     } catch (error) {
       setDashboardError(error instanceof Error ? error.message : 'Unable to delete message.')
@@ -294,6 +312,14 @@ function ChatManage() {
     } finally {
       setSendingMessage(false)
     }
+  }
+
+  const openMessageModal = (message) => {
+    setSelectedMessage(message)
+  }
+
+  const closeMessageModal = () => {
+    setSelectedMessage(null)
   }
 
   const handleDraftKeyDown = (event) => {
@@ -473,9 +499,16 @@ function ChatManage() {
                                 {new Date(row.createdAt).toLocaleString()}
                               </td>
                               <td className="max-w-md px-3 py-2">
-                                <span className="line-clamp-4 whitespace-pre-wrap break-words text-zinc-300">
-                                  {row.message}
-                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => openMessageModal(row)}
+                                  className="group block w-full rounded-md text-left outline-none transition hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-lime-300/35"
+                                  aria-label={`Open message ${row.id} detail`}
+                                >
+                                  <span className="line-clamp-4 whitespace-pre-wrap break-words text-zinc-300 transition group-hover:text-zinc-100">
+                                    {row.message}
+                                  </span>
+                                </button>
                               </td>
                               <td className="whitespace-nowrap px-3 py-2">
                                 <button
@@ -598,6 +631,54 @@ function ChatManage() {
           </div>
         )}
       </main>
+
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+          selectedMessage
+            ? 'pointer-events-auto bg-black/65 opacity-100 backdrop-blur-[2px]'
+            : 'pointer-events-none bg-black/0 opacity-0 backdrop-blur-0'
+        }`}
+        onClick={closeMessageModal}
+        role="presentation"
+      >
+        <section
+          className={`w-full max-w-2xl rounded-2xl border border-white/10 bg-zinc-900/95 p-5 shadow-2xl shadow-black/60 transition-all duration-300 sm:p-6 ${
+            selectedMessage ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-4 scale-95 opacity-0'
+          }`}
+          onClick={(event) => event.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="message-detail-title"
+        >
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div>
+              <h3 id="message-detail-title" className="text-base font-semibold text-white sm:text-lg">
+                Message detail
+              </h3>
+              <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
+                From {selectedMessage?.displayId ?? '-'} at{' '}
+                {selectedMessage ? new Date(selectedMessage.createdAt).toLocaleString() : '-'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={closeMessageModal}
+              className="rounded-lg border border-white/15 px-2.5 py-1.5 text-xs text-zinc-300 transition hover:border-white/30 hover:text-white"
+              aria-label="Close message detail"
+            >
+              Close
+            </button>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-zinc-950/70 px-4 py-3">
+            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-100 sm:text-[15px]">
+              {selectedMessage?.message ?? ''}
+            </p>
+          </div>
+          <p className="mt-3 text-[11px] text-zinc-500 sm:text-xs">
+            Press <kbd className="rounded border border-white/20 px-1.5 py-0.5 text-zinc-300">Esc</kbd> to close.
+          </p>
+        </section>
+      </div>
     </div>
   )
 }
