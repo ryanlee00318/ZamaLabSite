@@ -42,6 +42,10 @@ function ChatManage() {
   const pollInFlightAbortRef = useRef(null)
 
   const isLoggedIn = useMemo(() => Boolean(token && admin), [token, admin])
+  const groupMessages = useMemo(
+    () => messages.filter((row) => !String(row?.id ?? '').startsWith('email_support:')),
+    [messages]
+  )
   const emailMessages = useMemo(
     () => messages.filter((row) => String(row?.id ?? '').startsWith('email_support:')),
     [messages]
@@ -530,14 +534,14 @@ function ChatManage() {
                         </tr>
                       </thead>
                       <tbody className="text-zinc-200">
-                        {messages.length === 0 && !dataLoading ? (
+                        {groupMessages.length === 0 && !dataLoading ? (
                           <tr>
                             <td colSpan={5} className="px-3 py-8 text-center text-zinc-500">
                               No messages yet.
                             </td>
                           </tr>
                         ) : (
-                          messages.map((row) => (
+                          groupMessages.map((row) => (
                             <tr key={row.id} className="border-b border-white/5 align-top hover:bg-white/[0.03]">
                               <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-zinc-500">{row.id}</td>
                               <td className="whitespace-nowrap px-3 py-2 text-violet-200/90">{row.displayId}</td>
@@ -581,14 +585,14 @@ function ChatManage() {
                     onScroll={updateStickToBottomFromScroll}
                     className="chat-scrollbar-hidden flex max-h-[min(70vh,560px)] min-h-[360px] flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-zinc-950/50 px-2 py-3 ring-1 ring-inset ring-white/5"
                   >
-                    {messages.length === 0 && !dataLoading ? (
+                    {groupMessages.length === 0 && !dataLoading ? (
                       <p className="flex flex-1 items-center justify-center py-8 text-center text-sm text-zinc-500">
                         No messages yet.
                       </p>
                     ) : (
                       <ul className="mt-auto flex flex-col gap-0.5">
-                        {messages.map((item, index) => {
-                          const prev = index > 0 ? messages[index - 1] : null
+                        {groupMessages.map((item, index) => {
+                          const prev = index > 0 ? groupMessages[index - 1] : null
                           const stackedWithPrev = Boolean(prev && prev.displayId === item.displayId)
                           const isRight = item.displayId === 'Support Team'
                           const timeLabel = new Date(item.createdAt).toLocaleTimeString(undefined, {

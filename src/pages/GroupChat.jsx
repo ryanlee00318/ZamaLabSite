@@ -60,6 +60,10 @@ function GroupChat({ isSidePanel = false }) {
   const pollInFlightAbortRef = useRef(null)
 
   const isAuthenticated = useMemo(() => Boolean(token && user), [token, user])
+  const visibleMessages = useMemo(
+    () => messages.filter((item) => !String(item?.id ?? '').startsWith('email_support:')),
+    [messages]
+  )
 
   const updateStickToBottomFromScroll = () => {
     const el = messagesListRef.current
@@ -439,15 +443,15 @@ function GroupChat({ isSidePanel = false }) {
             onScroll={updateStickToBottomFromScroll}
             className={`chat-scrollbar-hidden flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-zinc-950/50 px-2 py-3 ring-1 ring-inset ring-white/5 ${isSidePanel ? '' : 'max-h-[540px] min-h-[280px]'}`}
           >
-            {messages.length === 0 ? (
+            {visibleMessages.length === 0 ? (
               <p className="flex flex-1 items-center justify-center py-8 text-center text-sm text-zinc-500">
                 {messagesLoading ? 'Loading chat…' : 'No messages yet. Say hello.'}
               </p>
             ) : (
               <ul className="mt-auto flex flex-col gap-0.5">
-                {messages.map((item, index) => {
+                {visibleMessages.map((item, index) => {
                   const isOwn = item.displayId === user.displayId
-                  const prev = index > 0 ? messages[index - 1] : null
+                  const prev = index > 0 ? visibleMessages[index - 1] : null
                   const stackedWithPrev = Boolean(prev && prev.displayId === item.displayId)
                   const timeLabel = new Date(item.createdAt).toLocaleTimeString(undefined, {
                     hour: '2-digit',
