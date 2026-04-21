@@ -4,40 +4,74 @@ import M from 'materialize-css'
 export function setupTemCashPartnersCarousel(carouselEl) {
   if (!carouselEl) return () => {}
 
-  const existing = M.Carousel.getInstance(carouselEl)
-  if (existing) existing.destroy()
+  const viewportQuery = window.matchMedia('(max-width: 640px)')
+  let instance = null
+  let isMobileViewport = viewportQuery.matches
 
-  const raw = M.Carousel.init(carouselEl, {
-    dist: 0,
-    padding: 100,
-    autoScroll: 3500,
-  })
-  const instance = Array.isArray(raw) ? raw[0] : raw
-  if (!instance) return () => {}
+  const destroyInstance = () => {
+    if (!instance) return
+    if (instance.autoScrollIntervalId) {
+      window.clearInterval(instance.autoScrollIntervalId)
+      instance.autoScrollIntervalId = undefined
+    }
+    instance.destroy()
+    instance = null
+  }
+
+  const initInstance = () => {
+    destroyInstance()
+    const options = isMobileViewport
+      ? {
+          dist: 0,
+          padding: 0,
+          numVisible: 1,
+          autoScroll: 3500,
+        }
+      : {
+          dist: 0,
+          padding: 100,
+          autoScroll: 3500,
+        }
+
+    const raw = M.Carousel.init(carouselEl, options)
+    instance = Array.isArray(raw) ? raw[0] : raw
+    if (!instance) return
+
+    if (instance.options.autoScroll) {
+      instance.autoScrollIntervalId = window.setInterval(() => instance?.next(), instance.options.autoScroll)
+    }
+  }
 
   const pause = () => {
-    const c = M.Carousel.getInstance(carouselEl)
-    if (c?.autoScrollIntervalId) {
-      window.clearInterval(c.autoScrollIntervalId)
-      c.autoScrollIntervalId = undefined
+    if (instance?.autoScrollIntervalId) {
+      window.clearInterval(instance.autoScrollIntervalId)
+      instance.autoScrollIntervalId = undefined
     }
   }
 
   const resume = () => {
-    const c = M.Carousel.getInstance(carouselEl)
-    if (c && !c.autoScrollIntervalId && c.options.autoScroll) {
-      c.autoScrollIntervalId = window.setInterval(() => c.next(), c.options.autoScroll)
+    if (instance && !instance.autoScrollIntervalId && instance.options.autoScroll) {
+      instance.autoScrollIntervalId = window.setInterval(() => instance?.next(), instance.options.autoScroll)
     }
   }
 
-  if (instance.options.autoScroll) {
-    instance.autoScrollIntervalId = window.setInterval(() => instance.next(), instance.options.autoScroll)
+  const handleViewportChange = (event) => {
+    const nextIsMobileViewport = event?.matches ?? viewportQuery.matches
+    if (nextIsMobileViewport === isMobileViewport) return
+    isMobileViewport = nextIsMobileViewport
+    initInstance()
   }
 
+  initInstance()
   carouselEl.addEventListener('mouseover', pause, { passive: true })
   carouselEl.addEventListener('mouseleave', resume, { passive: true })
   carouselEl.addEventListener('touchstart', pause, { passive: true })
   carouselEl.addEventListener('touchend', resume, { passive: true })
+  if (typeof viewportQuery.addEventListener === 'function') {
+    viewportQuery.addEventListener('change', handleViewportChange)
+  } else if (typeof viewportQuery.addListener === 'function') {
+    viewportQuery.addListener(handleViewportChange)
+  }
 
   return () => {
     pause()
@@ -45,6 +79,11 @@ export function setupTemCashPartnersCarousel(carouselEl) {
     carouselEl.removeEventListener('mouseleave', resume)
     carouselEl.removeEventListener('touchstart', pause)
     carouselEl.removeEventListener('touchend', resume)
-    instance.destroy()
+    if (typeof viewportQuery.removeEventListener === 'function') {
+      viewportQuery.removeEventListener('change', handleViewportChange)
+    } else if (typeof viewportQuery.removeListener === 'function') {
+      viewportQuery.removeListener(handleViewportChange)
+    }
+    destroyInstance()
   }
 }

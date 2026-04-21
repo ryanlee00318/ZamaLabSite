@@ -5,12 +5,12 @@ import logoGif from '../assets/logo.gif'
 import tLogo from '../assets/t-logo.png'
 import { setupTemCashPartnersCarousel } from '../lib/temCashPartnersCarousel'
 import GroupChat from './GroupChat'
-import '../styles/temTrustedPartners.css'
-import '../styles/temCashHeader.css'
+import '../styles/ZamaTrustedPartners.css'
+import '../styles/ZamaHeader.css'
 
-const REWARD_RATE = 0.9750186519
-const MINT_RATE = 1.553813
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:4000'
+const COINGECKO_SIMPLE_PRICE_URL =
+  'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,zama&vs_currencies=usd'
 const A = (name) => `/tem-cash-assets/${name}`
 
 const readErrorMessage = async (response, fallbackMessage) => {
@@ -114,6 +114,23 @@ const formatHistoryNumber = (value) => {
   return '-'
 }
 
+const parseHistoryNumericValue = (value) => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const normalized = Number.parseFloat(value.replaceAll(',', ''))
+    if (Number.isFinite(normalized)) return normalized
+  }
+  return null
+}
+
+const formatHistoryUsdValue = (tokenAmount, zamaUsd) => {
+  const normalizedTokenAmount = parseHistoryNumericValue(tokenAmount)
+  if (normalizedTokenAmount === null) return null
+  if (!Number.isFinite(zamaUsd) || zamaUsd <= 0) return null
+  const usdValue = normalizedTokenAmount * zamaUsd
+  return usdValue.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
+}
+
 const resolveHistoryStatus = (row, nowTimestamp) => {
   const unlockEndTimestamp = Date.parse(row.unlockEndAt)
   const claimTimestamp = Date.parse(row.claimAt)
@@ -143,8 +160,10 @@ function Home() {
   const partnersCarouselRef = useRef(null)
   const [walletAddress, setWalletAddress] = useState('')
   const [action, setAction] = useState('buy')
-  const [trxAmount, setTrxAmount] = useState(10000)
-  const [mintAmount, setMintAmount] = useState(10000)
+  const [trxAmount, setTrxAmount] = useState(1)
+  const [mintAmount, setMintAmount] = useState(100000)
+  const [marketPrices, setMarketPrices] = useState({ ethUsd: 0, zamaUsd: 0 })
+  const [marketPricesLoading, setMarketPricesLoading] = useState(true)
   const [sortConfig, setSortConfig] = useState({ key: 'apr', direction: 'desc' })
   const [operators, setOperators] = useState([])
   const [operatorsLoading, setOperatorsLoading] = useState(true)
@@ -168,6 +187,61 @@ function Home() {
 
   useEffect(() => {
     return setupTemCashPartnersCarousel(partnersCarouselRef.current)
+  }, [])
+
+  useEffect(() => {
+    const htmlEl = document.documentElement
+    const bodyEl = document.body
+    const previousHtmlOverflow = htmlEl.style.overflow
+    const previousBodyOverflow = bodyEl.style.overflow
+    const isMobileViewport = window.matchMedia('(max-width: 639px)').matches
+
+    if (isChatPanelOpen && isMobileViewport) {
+      htmlEl.style.overflow = 'hidden'
+      bodyEl.style.overflow = 'hidden'
+    }
+
+    return () => {
+      htmlEl.style.overflow = previousHtmlOverflow
+      bodyEl.style.overflow = previousBodyOverflow
+    }
+  }, [isChatPanelOpen])
+
+  useEffect(() => {
+    let ignore = false
+
+    const loadMarketPrices = async () => {
+      try {
+        const response = await fetch(COINGECKO_SIMPLE_PRICE_URL)
+        if (!response.ok) {
+          throw new Error(`CoinGecko request failed with status ${response.status}`)
+        }
+
+        const payload = await response.json()
+        const ethUsd = Number(payload?.ethereum?.usd)
+        const zamaUsd = Number(payload?.zama?.usd)
+        if (!Number.isFinite(ethUsd) || !Number.isFinite(zamaUsd) || ethUsd <= 0 || zamaUsd <= 0) {
+          throw new Error('CoinGecko returned invalid market prices.')
+        }
+
+        if (ignore) return
+        setMarketPrices({ ethUsd, zamaUsd })
+      } catch {
+        if (ignore) return
+      } finally {
+        if (!ignore) {
+          setMarketPricesLoading(false)
+        }
+      }
+    }
+
+    loadMarketPrices()
+    const intervalId = window.setInterval(loadMarketPrices, 60000)
+
+    return () => {
+      ignore = true
+      window.clearInterval(intervalId)
+    }
   }, [])
 
   useEffect(() => {
@@ -257,9 +331,17 @@ function Home() {
     return () => controller.abort()
   }, [])
 
-  const temReceived = useMemo(() => trxAmount * REWARD_RATE, [trxAmount])
+  const zamaPerEth = useMemo(() => {
+    if (marketPrices.ethUsd <= 0 || marketPrices.zamaUsd <= 0) return 0
+    return marketPrices.ethUsd / marketPrices.zamaUsd
+  }, [marketPrices.ethUsd, marketPrices.zamaUsd])
+  const ethPerZama = useMemo(() => {
+    if (marketPrices.ethUsd <= 0 || marketPrices.zamaUsd <= 0) return 0
+    return marketPrices.zamaUsd / marketPrices.ethUsd
+  }, [marketPrices.ethUsd, marketPrices.zamaUsd])
+  const temReceived = useMemo(() => trxAmount * zamaPerEth, [trxAmount, zamaPerEth])
   const trxLabel = useMemo(() => Number(trxAmount).toLocaleString(), [trxAmount])
-  const trxNeededForMint = useMemo(() => mintAmount * MINT_RATE, [mintAmount])
+  const ethReceivedForMint = useMemo(() => mintAmount * ethPerZama, [mintAmount, ethPerZama])
   const sortedOperators = useMemo(() => {
     const rows = [...operators]
     if (!sortConfig?.key) return rows
@@ -382,7 +464,7 @@ function Home() {
       className={`home-page flex min-h-screen flex-col overflow-x-hidden bg-black text-white ${isChatPanelOpen ? 'home-chat-open' : ''}`}
     >
       <div
-        className={`transition-[margin] duration-300 ease-out ${isChatPanelOpen ? 'lg:mr-[380px]' : ''}`}
+        className={`transition-[margin] duration-300 ease-out ${isChatPanelOpen ? 'sm:mr-[380px]' : ''}`}
       >
       <div
         className="bg-cover bg-center bg-no-repeat"
@@ -405,28 +487,34 @@ function Home() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-        <section className="grid gap-6 lg:grid-cols-[2.2fr_1fr]">
+      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-16 lg:px-8 lg:py-16">
+        <section className={`grid gap-6 ${isChatPanelOpen ? 'min-[1500px]:lg:grid-cols-[2.2fr_1fr]' : 'lg:grid-cols-[2.2fr_1fr]'}`}>
           <article className="rounded-2xl border border-lime-300/20 bg-black p-4 shadow-2xl sm:rounded-3xl sm:p-6 md:p-8">
-            <div className="grid gap-6 md:gap-8 lg:grid-cols-[minmax(0,360px)_1fr]">
+            <div className={`grid gap-6 md:gap-8 ${isChatPanelOpen ? 'min-[1500px]:lg:grid-cols-[minmax(0,360px)_1fr]' : 'lg:grid-cols-[minmax(0,360px)_1fr]'}`}>
               <div className="flex h-full w-full items-center justify-center">
-                <div className="aspect-square w-full max-w-[360px] min-h-[220px] max-h-[min(360px,70vw)]">
+                <div
+                  className={`aspect-square w-full min-h-[220px] ${
+                    isChatPanelOpen
+                      ? 'max-w-[240px] min-[1200px]:max-w-[280px] min-[1550px]:max-w-[360px] max-h-[min(360px,70vw)]'
+                      : 'max-w-[360px] max-h-[min(360px,70vw)]'
+                  }`}
+                >
                   <Spline scene="https://prod.spline.design/JIZmxcV4oYUWBm21/scene.splinecode" />
                 </div>
               </div>
 
-              <div className="min-w-0 space-y-3 sm:space-y-4">
+              <div className="min-w-0 space-y-2 sm:space-y-3">
                 <h1 className="text-2xl font-bold text-lime-100 sm:text-3xl">Zama Staking</h1>
                 <p className="text-base text-lime-100/90 sm:text-lg">Secure staking. Simple rewards.</p>
-                <p className="text-md leading-8 text-zinc-200">
+                <p className="text-md leading-5 sm:leading-6 text-zinc-200">
                   Participate in Zama Staking through a straightforward staking experience designed for long-term users. Stake your assets, monitor your position, and earn rewards through a clear and accessible interface.
                 </p>
-                <p className="text-md leading-8 text-zinc-300">
+                <p className="text-md leading-5 sm:leading-6 text-zinc-300">
                   Zama Staking is built to make participation simple. Whether you are getting started or managing an existing position, the platform provides an easy way to stake, track performance, and stay engaged with the ecosystem.
                 </p>
                 <button
                   type="button"
-                  className="mt-4 rounded-full bg-zinc-700 px-8 py-3 text-sm font-bold tracking-wide text-zinc-100 transition hover:bg-zinc-600"
+                  className="!mt-4 mx-auto block rounded-full bg-zinc-700 px-8 py-3 text-sm font-bold tracking-wide text-zinc-100 transition hover:bg-zinc-600"
                 >
                   WHITEPAPER V2
                 </button>
@@ -437,7 +525,7 @@ function Home() {
           <aside className="min-w-0 space-y-4">
             <div className="rounded-2xl border border-lime-300/30 bg-black p-4 shadow-xl sm:rounded-[30px] sm:p-6">
               <label htmlFor="temAction" className="text-[12px] text-zinc-300">
-                TEM action:
+                ZAMA action:
               </label>
               <select
                 id="temAction"
@@ -458,7 +546,7 @@ function Home() {
                   <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                     <div>
                       <label htmlFor="trxInput" className="block text-[12px] text-zinc-400">
-                        TRX (pay):
+                        ETH (pay):
                       </label>
                       <input
                         id="trxInput"
@@ -469,19 +557,27 @@ function Home() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[12px] text-zinc-400">TEM (get):</label>
+                      <label className="block text-[12px] text-zinc-400">ZAMA (get):</label>
                       <div className="mt-1 w-full border-b border-dotted border-zinc-500 pb-2 text-[18px] text-zinc-400">
                         {temReceived.toFixed(6)}
                       </div>
                     </div>
                   </div>
-                  <p className="mb-5 text-right text-[11px] font-semibold text-white">≈ 1.03 TRX/TEM</p>
+                  <p className="mb-5 text-right text-[11px] font-semibold text-white">
+                    {marketPricesLoading ? 'Loading market prices...' : `1 ETH ≈ ${zamaPerEth.toLocaleString(undefined, { maximumFractionDigits: 2 })} ZAMA`}
+                  </p>
+                  <button
+                    type="button"
+                    className="w-full rounded-full border-[3px] border-lime-400 bg-transparent py-3 text-[18px] font-extrabold leading-none text-lime-300 transition hover:bg-lime-400/10"
+                  >
+                    {trxLabel} ETH
+                  </button>
                 </>
               ) : (
                 <>
                   <div className="mb-7">
                     <label htmlFor="mintInput" className="block text-[12px] text-zinc-400">
-                      Mint TEM Amount:
+                      Mint ZAMA Amount:
                     </label>
                     <input
                       id="mintInput"
@@ -491,12 +587,14 @@ function Home() {
                       className="mt-1 w-full border-b border-zinc-500 bg-transparent pb-2 text-[18px] text-white outline-none"
                     />
                   </div>
-                  <p className="mb-5 text-right text-[11px] font-semibold text-white">≈ 1.55 TRX/TEM</p>
+                  <p className="mb-5 text-right text-[11px] font-semibold text-white">
+                    {marketPricesLoading ? 'Loading market prices...' : `1 ZAMA ≈ ${ethPerZama.toFixed(8)} ETH`}
+                  </p>
                   <button
                     type="button"
                     className="w-full rounded-full border-[3px] border-lime-400 bg-transparent py-3 text-[18px] font-extrabold leading-none text-lime-300 transition hover:bg-lime-400/10"
                   >
-                    {trxNeededForMint.toLocaleString(undefined, { maximumFractionDigits: 2 })} TRX
+                    {ethReceivedForMint.toLocaleString(undefined, { maximumFractionDigits: 8 })} ETH
                   </button>
                 </>
               )}
@@ -514,7 +612,7 @@ function Home() {
               <p>
                 {communityHistoryLoading
                   ? 'Loading community staking history...'
-                  : communityHistoryError || `${communityHistory.length} records synced from backend.`}
+                  : communityHistoryError || `${communityHistory.length} records`}
               </p>
             </div>
             <div className="community-history-table-wrap">
@@ -522,10 +620,10 @@ function Home() {
                 <thead>
                   <tr>
                     <th>Wallet</th>
-                    <th>Operator</th>
+                    <th className="hidden sm:table-cell">Operator</th>
                     <th>Amount</th>
                     <th>Reward</th>
-                    <th>Unlock / Status</th>
+                    <th className="hidden sm:table-cell">Unlock / Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -542,12 +640,14 @@ function Home() {
                       const operatorIcon = getOperatorIconUrl(row.operator)
                       const walletLabel = row.wallet ?? '-'
                       const operatorLabel = row.operator ?? '-'
+                      const amountUsdLabel = formatHistoryUsdValue(row.amount, marketPrices.zamaUsd)
+                      const rewardsUsdLabel = formatHistoryUsdValue(row.rewards, marketPrices.zamaUsd)
                       return (
                         <tr key={`${row.wallet}-${row.operator}-${row.unlockEndAt ?? row.unlockTime}`}>
                           <td>
                             <span className="history-wallet-pill">{formatHistoryWallet(walletLabel)}</span>
                           </td>
-                          <td>
+                          <td className="hidden sm:table-cell">
                             <div className="history-operator-cell">
                               {operatorIcon ? (
                                 <span className="history-operator-dot">
@@ -558,12 +658,18 @@ function Home() {
                             </div>
                           </td>
                           <td>
-                            <span className="history-token-value">{formatHistoryNumber(row.amount)} ZAMA</span>
+                            <span className="history-token-stack">
+                              <span className="history-token-value">{formatHistoryNumber(row.amount)} $ZAMA</span>
+                              <span className="history-token-usd">≈ {amountUsdLabel ?? '--'}</span>
+                            </span>
                           </td>
                           <td>
-                            <span className="history-token-value">{formatHistoryNumber(row.rewards)} ZAMA</span>
+                            <span className="history-token-stack">
+                              <span className="history-token-value">{formatHistoryNumber(row.rewards)} $ZAMA</span>
+                              <span className="history-token-usd">≈ {rewardsUsdLabel ?? '--'}</span>
+                            </span>
                           </td>
-                          <td>
+                          <td className="hidden sm:table-cell">
                             {status.label === 'unlocking' ? (
                               <span className="history-countdown-pill">{remaining === '-' ? 'Finishing soon' : remaining}</span>
                             ) : (
@@ -747,13 +853,13 @@ function Home() {
           <div className="grid gap-10 lg:grid-cols-[1.7fr_1fr] lg:gap-24">
             <div className="min-w-0">
               <h5 className="text-2xl font-bold text-lime-100 sm:text-3xl">A simpler way to stake with Zama</h5>
-              <p className="mt-3 leading-7 text-zinc-200">
+              <p className="mt-3 leading-6 sm:leading-7 text-zinc-200">
                 Zama Staking offers a professional and user-friendly way to participate in staking. The experience is designed to help users manage their assets confidently while maintaining visibility into rewards and staking activity.
               </p>
-              <p className="mt-3 leading-7 text-zinc-300">
+              <p className="mt-3 leading-6 sm:leading-7 text-zinc-300">
                 With a clean staking flow and accessible interface, users can stake, review balances, and manage positions without unnecessary complexity. The focus is on clarity, consistency, and long-term usability.
               </p>
-              <p className="mt-3 leading-7 text-zinc-300">
+              <p className="mt-3 leading-6 sm:leading-7 text-zinc-300">
                 Built for reliability and ease of use, Zama Staking supports a more accessible staking experience for users who value simplicity, transparency, and a professional platform experience.
               </p>
               <p className="mt-4 text-zinc-200">Explore Zama Staking through the links below:</p>
@@ -862,7 +968,9 @@ function Home() {
       <button
         type="button"
         onClick={() => setIsChatPanelOpen((prev) => !prev)}
-        className={`fixed right-0 top-1/2 z-[95] -translate-y-1/2 rounded-l-xl border border-r-0 border-lime-300/30 bg-zinc-900/95 px-3 py-4 text-lime-200 shadow-xl transition-transform duration-300 ease-out hover:bg-zinc-800 ${isChatPanelOpen ? 'sm:-translate-x-[380px]' : ''}`}
+        className={`fixed right-0 top-1/2 z-[95] -translate-y-1/2 rounded-l-xl border border-r-0 border-lime-300/30 bg-zinc-900 px-3 py-4 text-lime-200 shadow-xl transition-all duration-300 ease-out hover:bg-zinc-800 ${
+          isChatPanelOpen ? 'pointer-events-none opacity-0' : 'opacity-100'
+        }`}
         aria-label={isChatPanelOpen ? 'Close group chat panel' : 'Open group chat panel'}
         title={isChatPanelOpen ? 'Close group chat' : 'Open group chat'}
       >
@@ -870,7 +978,7 @@ function Home() {
       </button>
 
       <aside
-        className={`fixed right-0 top-0 z-[100] h-[100dvh] w-full max-w-full border-l border-lime-300/20 bg-zinc-950/98 shadow-2xl transition-transform duration-300 ease-out sm:max-w-[380px] sm:w-[380px] ${
+        className={`fixed right-0 top-0 z-[100] h-[100dvh] w-screen sm:w-[380px] sm:max-w-[380px] border-l border-lime-300/20 bg-zinc-950 shadow-2xl transition-transform duration-300 ease-out ${
           isChatPanelOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-hidden={!isChatPanelOpen}

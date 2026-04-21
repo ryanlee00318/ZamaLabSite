@@ -327,8 +327,8 @@ function GroupChat({ isSidePanel = false }) {
     >
 
       {!isAuthenticated ? (
-        <section className="rounded-2xl border border-white/10 bg-zinc-950/80 p-6 backdrop-blur">
-          <div className="mb-5 flex gap-2 rounded-xl bg-zinc-900/70 p-1">
+        <section className={`rounded-2xl border border-white/10 p-6 ${isSidePanel ? 'bg-zinc-950' : 'bg-zinc-950/80 backdrop-blur'}`}>
+          <div className={`mb-5 flex gap-2 rounded-xl p-1 ${isSidePanel ? 'bg-zinc-900' : 'bg-zinc-900/70'}`}>
             <button
               type="button"
               onClick={() => setAuthMode('login')}
@@ -416,7 +416,11 @@ function GroupChat({ isSidePanel = false }) {
 
       {isAuthenticated ? (
         <section
-          className={`flex min-h-0 flex-1 flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-zinc-900/90 to-zinc-950/95 p-4 shadow-lg shadow-black/20 backdrop-blur sm:p-3 ${isSidePanel ? '' : 'min-h-[min(70vh,720px)]'}`}
+          className={`flex min-h-0 flex-1 flex-col rounded-2xl border border-white/10 p-4 shadow-lg shadow-black/20 sm:p-3 ${
+            isSidePanel
+              ? 'bg-zinc-950'
+              : 'bg-gradient-to-b from-zinc-900/90 to-zinc-950/95 backdrop-blur min-h-[min(70vh,720px)]'
+          }`}
         >
           <div className="mb-3 shrink-0 flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
             <p className="text-xs text-zinc-400 sm:text-sm">
@@ -441,7 +445,9 @@ function GroupChat({ isSidePanel = false }) {
           <div
             ref={messagesListRef}
             onScroll={updateStickToBottomFromScroll}
-            className={`chat-scrollbar-hidden flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl bg-zinc-950/50 px-2 py-3 ring-1 ring-inset ring-white/5 ${isSidePanel ? '' : 'max-h-[540px] min-h-[280px]'}`}
+            className={`chat-scrollbar-hidden flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden rounded-2xl px-2 py-3 ring-1 ring-inset ring-white/5 ${
+              isSidePanel ? 'bg-zinc-950' : 'bg-zinc-950/50 max-h-[540px] min-h-[280px]'
+            }`}
           >
             {visibleMessages.length === 0 ? (
               <p className="flex flex-1 items-center justify-center py-8 text-center text-sm text-zinc-500">
@@ -476,11 +482,15 @@ function GroupChat({ isSidePanel = false }) {
                         <div
                           className={`relative rounded-2xl px-3.5 py-2 shadow-sm ${
                             isOwn
-                              ? 'rounded-br-md bg-[#3d4a6b]/95 text-zinc-50 ring-1 ring-[#7b8fd4]/25'
-                              : 'rounded-bl-md bg-zinc-800/90 text-zinc-100 ring-1 ring-white/10'
+                              ? isSidePanel
+                                ? 'rounded-br-md bg-[#3d4a6b] text-zinc-50 ring-1 ring-[#7b8fd4]/25'
+                                : 'rounded-br-md bg-[#3d4a6b]/95 text-zinc-50 ring-1 ring-[#7b8fd4]/25'
+                              : isSidePanel
+                                ? 'rounded-bl-md bg-zinc-800 text-zinc-100 ring-1 ring-white/10'
+                                : 'rounded-bl-md bg-zinc-800/90 text-zinc-100 ring-1 ring-white/10'
                           }`}
                         >
-                          <p className="m-0 whitespace-pre-wrap break-words text-[13px] leading-relaxed sm:text-sm">
+                          <p className="m-0 whitespace-pre-wrap [overflow-wrap:anywhere] break-all text-[13px] leading-relaxed sm:text-sm">
                             {item.message}
                           </p>
                           <div className={`mt-1.5 flex flex-wrap items-center ${isOwn ? 'justify-end' : 'justify-start'}`}>
@@ -516,7 +526,9 @@ function GroupChat({ isSidePanel = false }) {
                 rows={1}
                 autoComplete="off"
                 spellCheck
-                className="box-border min-h-[2.75rem] w-full min-w-0 flex-1 resize-none rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-2.5 text-sm leading-relaxed text-zinc-100 shadow-inner outline-none ring-0 transition placeholder:text-zinc-500 focus:border-[#8b9fe8]/40 focus:bg-zinc-900"
+                className={`box-border min-h-[2.75rem] w-full min-w-0 flex-1 resize-none rounded-2xl border border-white/10 px-4 py-2.5 text-sm leading-relaxed text-zinc-100 shadow-inner outline-none ring-0 transition placeholder:text-zinc-500 focus:border-[#8b9fe8]/40 focus:bg-zinc-900 ${
+                  isSidePanel ? 'bg-zinc-900' : 'bg-zinc-900/80'
+                }`}
               />
               <button
                 type="submit"
