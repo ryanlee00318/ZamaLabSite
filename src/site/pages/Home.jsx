@@ -4,15 +4,12 @@ import backgroundImage from '../assets/background.png'
 import logoGif from '../assets/logo.gif'
 import tLogo from '../assets/t-logo.png'
 import { setupTemCashPartnersCarousel } from '../lib/temCashPartnersCarousel'
-import { setupTemCashWalletFlip } from '../lib/temCashImageFlip'
-import walletFlipUrls from '../lib/temCashWalletFlipManifest.json'
 import GroupChat from './GroupChat'
 import '../styles/temTrustedPartners.css'
 import '../styles/temCashHeader.css'
 
 const REWARD_RATE = 0.9750186519
 const MINT_RATE = 1.553813
-const STATIC_WALLET_ADDRESS = '0x88f9DADF3541998B7edB482485C56234297C84c4'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:4000'
 const A = (name) => `/tem-cash-assets/${name}`
 
@@ -144,8 +141,7 @@ const resolveHistoryStatus = (row, nowTimestamp) => {
 
 function Home() {
   const partnersCarouselRef = useRef(null)
-  const walletsFlipRef = useRef(null)
-  const [walletAddress, setWalletAddress] = useState(null)
+  const [walletAddress, setWalletAddress] = useState('')
   const [action, setAction] = useState('buy')
   const [trxAmount, setTrxAmount] = useState(10000)
   const [mintAmount, setMintAmount] = useState(10000)
@@ -223,10 +219,6 @@ function Home() {
     }, 1000)
 
     return () => window.clearInterval(intervalId)
-  }, [])
-
-  useEffect(() => {
-    return setupTemCashWalletFlip(walletsFlipRef.current, walletFlipUrls)
   }, [])
 
   useEffect(() => {
@@ -315,18 +307,20 @@ function Home() {
   const isWalletConnected = Boolean(walletAddress)
 
   const handleConnectWallet = () => {
-    setWalletAddress(STATIC_WALLET_ADDRESS)
-  }
-
-  const handleDisconnectWallet = () => {
-    setWalletAddress(null)
-    setExpandedStakeKey(null)
   }
 
   const handleStakeToggle = (operatorKey) => {
     if (!isWalletConnected) return
     setExpandedStakeKey((prev) => (prev === operatorKey ? null : operatorKey))
     setStakePanelTab('stake')
+  }
+
+  const handleWalletSessionChange = (session) => {
+    const nextAddress = session?.isConnected ? session?.walletData?.address ?? '' : ''
+    setWalletAddress(nextAddress)
+    if (!nextAddress) {
+      setExpandedStakeKey(null)
+    }
   }
 
   const handleStakeAmountChange = (operatorKey, value) => {
@@ -403,27 +397,7 @@ function Home() {
                 <img src={tLogo} alt="TEM text logo" className="-ml-1 h-10 w-auto max-w-[min(140px,42vw)] object-contain sm:-ml-2 sm:h-14 sm:max-w-none" />
               </a>
               <div className="tem-cash-topbar-actions">
-                {isWalletConnected ? (
-                  <div className="topbar-button valign-wrapper">
-                    <div
-                      className="inline-flex max-w-[min(230px,calc(100vw-200px))] items-center rounded-sm border border-zinc-700 bg-zinc-800 px-2 py-2 text-xs font-semibold tracking-wide text-zinc-100 sm:max-w-[230px] sm:px-3"
-                      title={walletAddress}
-                    >
-                      <span className="overflow-hidden text-ellipsis whitespace-nowrap">{walletAddress}</span>
-                    </div>
-                  </div>
-                ) : null}
                 <div className="topbar-button valign-wrapper">
-                  <button
-                    id="wallets-button"
-                    type="button"
-                    className="btn connect custom-grey waves-black waves-effect white-text"
-                    aria-label={isWalletConnected ? 'Disconnect wallet' : 'Connect wallet'}
-                    onClick={isWalletConnected ? handleDisconnectWallet : handleConnectWallet}
-                    title={isWalletConnected ? walletAddress : 'Connect wallet'}
-                  >
-                    <div ref={walletsFlipRef} id="wallets-flip" className="image images-flip" />
-                  </button>
                 </div>
               </div>
             </div>
@@ -502,12 +476,6 @@ function Home() {
                     </div>
                   </div>
                   <p className="mb-5 text-right text-[11px] font-semibold text-white">≈ 1.03 TRX/TEM</p>
-                  <button
-                    type="button"
-                    className="w-full rounded-full border-[3px] border-lime-400 bg-transparent py-3 text-[18px] font-extrabold leading-none text-lime-300 transition hover:bg-lime-400/10"
-                  >
-                    {trxLabel} TRX
-                  </button>
                 </>
               ) : (
                 <>

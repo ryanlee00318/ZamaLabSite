@@ -1,19 +1,17 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
-import HowToStakeZama from './pages/HowToStakeZama'
-import ChatManage from './pages/ChatManage'
-import './index.css'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import Home from './site/pages/Home'
+import HowToStakeZama from './site/pages/HowToStakeZama'
+import ChatManage from './site/pages/ChatManage'
 
-function App() {
+export default function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/blog/how-to-stake-zama" element={<HowToStakeZama />} />
         <Route path="/chat-manage" element={<ChatManage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   )
 }
-
-export default App

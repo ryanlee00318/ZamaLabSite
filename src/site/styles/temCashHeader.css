@@ -100,17 +100,47 @@
 }
 
 /* tem.cash used .image { margin-top: 8px } for a different float layout; here it pushed icons past the button edge. */
-.tem-cash-header #wallets-button .image {
-  margin-top: 0;
-  display: block;
-  flex-shrink: 0;
+.tem-cash-header .tem-wallet-connector {
+  position: relative;
 }
 
-.tem-cash-header #wallets-flip {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  overflow: hidden;
+.tem-cash-header .tem-wallet-trigger {
+  min-width: 140px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 2px;
+  background: #484848 !important;
+  box-shadow: none;
+  color: #fff;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.tem-cash-header .tem-wallet-trigger:hover:not(:disabled) {
+  background: #5a5a5a !important;
+  transform: none;
+}
+
+.tem-cash-header .tem-wallet-trigger:disabled,
+.tem-cash-header .tem-wallet-trigger:disabled:hover {
+  background: #484848 !important;
+}
+
+.tem-cash-header .tem-wallet-address-trigger {
+  min-width: 172px;
+  justify-content: space-between;
+  border: 1px solid #5a5a5a;
+}
+
+.tem-cash-header .tem-wallet-address-trigger .wallet-address-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.tem-cash-header .tem-wallet-menu {
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 80;
 }
 
 /* Match tem.cash #menu-button — no Materialize `float:right` on the icon (breaks flex / looks “wrong”). */
@@ -185,4 +215,11 @@
   transform: rotateY(0);
   width: 100% !important;
   height: 100% !important;
+}
+
+@media only screen and (max-width: 600px) {
+  .tem-cash-header .tem-wallet-trigger {
+    min-width: 120px;
+    padding-inline: 10px;
+  }
 }
