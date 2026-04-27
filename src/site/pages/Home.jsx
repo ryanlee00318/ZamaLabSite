@@ -507,10 +507,10 @@ function Home() {
                 <h1 className="text-2xl font-bold text-lime-100 sm:text-3xl">Zama Staking</h1>
                 <p className="text-base text-lime-100/90 sm:text-lg">Secure staking. Simple rewards.</p>
                 <p className="text-md leading-5 sm:leading-6 text-zinc-200">
-                  Participate in Zama Staking through a straightforward staking experience designed for long-term users. Stake your assets, monitor your position, and earn rewards through a clear and accessible interface.
+                  Stake ZAMA with a listed operator and earn rewards based on the APR shown in the staking table. Each operator displays its reward rate, total stake, rewards, and commission so you can compare before staking.
                 </p>
                 <p className="text-md leading-5 sm:leading-6 text-zinc-300">
-                  Zama Staking is built to make participation simple. Whether you are getting started or managing an existing position, the platform provides an easy way to stake, track performance, and stay engaged with the ecosystem.
+                  Choose an operator, enter your ZAMA amount, and start earning. Your rewards depend on the operator you select, the amount you stake, and how long your tokens remain staked.
                 </p>
                 <button
                   type="button"
@@ -854,13 +854,13 @@ function Home() {
             <div className="min-w-0">
               <h5 className="text-2xl font-bold text-lime-100 sm:text-3xl">A simpler way to stake with Zama</h5>
               <p className="mt-3 leading-6 sm:leading-7 text-zinc-200">
-                Zama Staking offers a professional and user-friendly way to participate in staking. The experience is designed to help users manage their assets confidently while maintaining visibility into rewards and staking activity.
+                Zama Staking is designed to make reward earning clear before users commit their tokens. Instead of a single fixed rate, rewards are based on the APR offered by each staking operator.
               </p>
               <p className="mt-3 leading-6 sm:leading-7 text-zinc-300">
-                With a clean staking flow and accessible interface, users can stake, review balances, and manage positions without unnecessary complexity. The focus is on clarity, consistency, and long-term usability.
+                The final reward amount depends on the selected operator’s APR, the user’s staked ZAMA amount, staking duration, and any operator commission. Higher APR may offer higher estimated rewards, while commission can reduce the final amount received.
               </p>
               <p className="mt-3 leading-6 sm:leading-7 text-zinc-300">
-                Built for reliability and ease of use, Zama Staking supports a more accessible staking experience for users who value simplicity, transparency, and a professional platform experience.
+                Users can review APR, total rewards, total stake, and commission directly in the staking table, then manage staking, reward tracking, and claiming from one simple interface.
               </p>
               <p className="mt-4 text-zinc-200">Explore Zama Staking through the links below:</p>
               <div className="mt-2 flex flex-col text-sm">
